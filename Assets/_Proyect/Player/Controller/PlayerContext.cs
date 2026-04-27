@@ -1,3 +1,4 @@
+using DungeonLegacy.Player.States;
 using UnityEngine;
 
 namespace DungeonLegacy.Player
@@ -26,6 +27,8 @@ namespace DungeonLegacy.Player
         public float MoveInput { get; set; }
         public bool IsGrounded { get; set; }
         public bool IsFacingRight { get; set; } = true;
+
+        private PlayerAttackState _attack;
 
         public PlayerContext(
             Rigidbody2D rb,
