@@ -47,6 +47,8 @@ namespace DungeonLegacy.Player.States
                 ctx.EnemyLayer
             );
 
+            Debug.Log($"[Ataque] Enemigos detectados: {hits.Length}");
+
             foreach (Collider2D hit in hits)
             {
                 IDamageable damageable = hit.GetComponent<IDamageable>();
