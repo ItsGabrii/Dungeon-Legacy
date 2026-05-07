@@ -20,7 +20,6 @@ namespace DungeonLegacy.Player.States
             _damageApplied = false;
             ctx.Animator.SetTrigger("Attack");
 
-            // Consumir energía
             EnergySystem energy = ctx.Transform.GetComponent<EnergySystem>();
             if (energy != null)
                 energy.TryConsume(_energyCost);
@@ -30,7 +29,6 @@ namespace DungeonLegacy.Player.States
         {
             _timer += Time.deltaTime;
 
-            // Aplicar daño a mitad de la animación
             if (!_damageApplied && _timer >= _attackDuration * 0.5f)
             {
                 ApplyDamage(ctx);
@@ -39,7 +37,6 @@ namespace DungeonLegacy.Player.States
         }
 
         public void FixedUpdate(PlayerContext ctx) { }
-
         public void Exit(PlayerContext ctx) { }
 
         private void ApplyDamage(PlayerContext ctx)
@@ -55,12 +52,9 @@ namespace DungeonLegacy.Player.States
                 IDamageable damageable = hit.GetComponent<IDamageable>();
                 if (damageable == null) continue;
 
-                // Knockback en dirección opuesta al jugador
                 Vector2 knockbackDir = (hit.transform.position - ctx.Transform.position).normalized;
                 Vector2 knockback = knockbackDir * 6f;
-
                 damageable.TakeDamage(_attackDamage, knockback);
-                Debug.Log($"[Ataque] Golpeado: {hit.name} | Daño: {_attackDamage}");
             }
         }
     }

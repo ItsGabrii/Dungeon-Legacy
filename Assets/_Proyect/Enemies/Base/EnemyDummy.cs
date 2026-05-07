@@ -23,7 +23,11 @@ public class EnemyDummy : MonoBehaviour, IDamageable
         Debug.Log($"[EnemyDummy] Vida restante: {_currentHealth}");
 
         if (knockback != Vector2.zero)
-            GetComponent<Rigidbody2D>()?.AddForce(knockback, ForceMode2D.Impulse);
+        {
+            Rigidbody2D rb = GetComponent<Rigidbody2D>();
+            if (rb != null)
+                rb.AddForce(knockback, ForceMode2D.Impulse);
+        }
 
         if (_currentHealth <= 0)
         {

@@ -26,6 +26,7 @@ namespace DungeonLegacy.Player
         private PlayerHurtState _hurt;
         private PlayerDeadState _dead;
         private PlayerAttackState _attack;
+        private PlayerDashState _dash;
 
         private void Awake()
         {
@@ -46,6 +47,7 @@ namespace DungeonLegacy.Player
             _hurt = new PlayerHurtState();
             _dead = new PlayerDeadState();
             _attack = new PlayerAttackState();
+            _dash = new PlayerDashState();
 
             ChangeState(_idle);
         }
@@ -63,17 +65,26 @@ namespace DungeonLegacy.Player
 
             HandleFlip();
 
-            // ← Añade esto temporalmente
-            if (Input.GetMouseButtonDown(0))
-                Debug.Log($"[DEBUG] Click detectado | Estado actual: {_currentStateName}");
+            // Dash con Shift izquierdo — funciona en aire y suelo
+            if (Input.GetKeyDown(KeyCode.LeftShift) &&
+                _dash.CanDash &&
+                _currentState != _dead &&
+                _currentState != _dash)
+            {
+                ChangeState(_dash);
+                return;
+            }
 
-            // Ataque con click izquierdo
             if (Input.GetMouseButtonDown(0) &&
                 (_currentState == _idle || _currentState == _run))
             {
                 ChangeState(_attack);
                 return;
             }
+
+            
+            if (!_dash.CanDash && _ctx.IsGrounded && _currentState != _dash)
+                _dash.CanDash = true;
 
             HandleTransitions();
             _currentState.Update(_ctx);
@@ -88,7 +99,6 @@ namespace DungeonLegacy.Player
         {
             if (_currentState == _dead) return;
 
-            // Salida del ataque
             if (_currentState == _attack)
             {
                 if (_attack.IsFinished)
@@ -96,7 +106,13 @@ namespace DungeonLegacy.Player
                 return;
             }
 
-            // Salida del hurt
+            if (_currentState == _dash)
+            {
+                if (_dash.IsFinished)
+                    ChangeState(_ctx.IsGrounded ? _idle : _fall);
+                return;
+            }
+
             if (_currentState == _hurt)
             {
                 if (_hurt.IsFinished)
@@ -104,28 +120,24 @@ namespace DungeonLegacy.Player
                 return;
             }
 
-            // Salto
             if (Input.GetButtonDown("Jump") && _ctx.IsGrounded)
             {
                 ChangeState(_jump);
                 return;
             }
 
-            // Jump a Fall
             if (_currentState == _jump && _ctx.Rb.linearVelocity.y < 0)
             {
                 ChangeState(_fall);
                 return;
             }
 
-            // Aterrizaje
             if (_currentState == _fall && _ctx.IsGrounded)
             {
                 ChangeState(_idle);
                 return;
             }
 
-            // Movimiento horizontal
             if (_currentState == _idle || _currentState == _run)
             {
                 if (Mathf.Abs(_ctx.MoveInput) > 0.1f)
@@ -133,6 +145,8 @@ namespace DungeonLegacy.Player
                 else
                     ChangeState(_idle);
             }
+
+          
         }
 
         private void HandleFlip()
@@ -151,11 +165,12 @@ namespace DungeonLegacy.Player
 
         private void ChangeState(IPlayerState newState)
         {
+            if (newState == _currentState) return;
+
             _currentState?.Exit(_ctx);
             _currentState = newState;
             _currentState.Enter(_ctx);
             _currentStateName = newState.GetType().Name;
-            
         }
 
         public void OnHurt()

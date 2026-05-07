@@ -30,6 +30,8 @@ namespace DungeonLegacy.Player
 
         private PlayerAttackState _attack;
 
+        public float DefaultGravityScale { get; }
+
         public PlayerContext(
             Rigidbody2D rb,
             Animator animator,
@@ -46,6 +48,7 @@ namespace DungeonLegacy.Player
             AttackPoint = attackPoint;
             GroundLayer = groundLayer;
             EnemyLayer = enemyLayer;
+            DefaultGravityScale = rb.gravityScale; 
         }
     }
 }
