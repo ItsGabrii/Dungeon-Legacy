@@ -3,6 +3,7 @@ using DungeonLegacy.Persistence;
 using DungeonLegacy.Player;
 using DungeonLegacy.Player.Stats;
 using DungeonLegacy.Progression;
+using DungeonLegacy.UI;
 using UnityEngine;
 
 namespace DungeonLegacy.Managers
@@ -21,6 +22,9 @@ namespace DungeonLegacy.Managers
         private HealthComponent _playerHealth;
         private EnergySystem _playerEnergy;
         private ManaSystem _playerMana;
+
+        [Header("UI")]
+        [SerializeField] private EpitaphScreen _epitaphScreen;
 
         private void Awake()
         {
@@ -65,8 +69,25 @@ namespace DungeonLegacy.Managers
             Debug.Log($"[GenerationManager] Ancestro registrado — {record}");
             Debug.Log($"[GenerationManager] Legado familiar — {Legacy}");
 
-            // Iniciar siguiente generación
-            StartNextGeneration();
+            // Calcular resumen de herencia para mostrar en la pantalla de epitafio
+            string inheritanceSummary = BuildInheritanceSummary();
+
+            // Mostrar pantalla de epitafio — la siguiente generación arranca al pulsar Continuar
+            // Si no hay pantalla asignada, arranca directamente (útil para testing)
+            if (_epitaphScreen != null)
+                _epitaphScreen.Show(record, inheritanceSummary, StartNextGeneration);
+            else
+                StartNextGeneration();
+        }
+
+        /// Genera un resumen legible de los stats que puede heredar el siguiente heredero
+        private string BuildInheritanceSummary()
+        {
+            if (!Legacy.HasAncestors()) return "Primera generación — sin herencia.";
+
+            return "Stats heredados de forma aleatoria entre:\n" +
+                   "HP, Velocidad, Salto, Daño, Energía y Maná\n" +
+                   "(entre un 5% y un 20% de los stats del ancestro)";
         }
 
         /// Prepara el siguiente run aplicando la herencia
