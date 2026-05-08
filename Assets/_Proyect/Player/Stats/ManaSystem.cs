@@ -40,5 +40,11 @@ namespace DungeonLegacy.Player.Stats
         {
             _currentMana = Mathf.Min(_maxMana, _currentMana + amount);
         }
+
+        public void SetMaxMana(float newMax)
+        {
+            _maxMana = newMax;
+            _currentMana = newMax;
+        }
     }
 }

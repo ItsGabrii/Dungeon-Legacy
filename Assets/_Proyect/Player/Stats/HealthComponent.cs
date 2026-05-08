@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using UnityEngine;
 using DungeonLegacy.Player;
 
@@ -6,7 +6,7 @@ namespace DungeonLegacy.Player.Stats
 {
     public class HealthComponent : MonoBehaviour, IDamageable, IHealable
     {
-        [Header("Configuraci�n")]
+        [Header("Configuración")]
         [SerializeField] private float _maxHealth = 100f;
 
         private float _currentHealth;
@@ -27,17 +27,15 @@ namespace DungeonLegacy.Player.Stats
         public void TakeDamage(float amount, Vector2 knockback = default)
         {
             if (IsDead) return;
-
             _currentHealth = Mathf.Max(0, _currentHealth - amount);
 
-            // Aplicar knockback al jugador (estilo Hollow Knight � el jugador sale empujado)
             if (knockback != Vector2.zero)
                 _playerController.GetComponent<Rigidbody2D>().AddForce(knockback, ForceMode2D.Impulse);
 
             if (_currentHealth <= 0)
             {
-                OnDeath?.Invoke();
-                _playerController.OnDead();
+                _playerController.OnDead(); 
+                OnDeath?.Invoke();           
             }
             else
             {
@@ -49,6 +47,13 @@ namespace DungeonLegacy.Player.Stats
         {
             if (IsDead) return;
             _currentHealth = Mathf.Min(_maxHealth, _currentHealth + amount);
+        }
+
+        /// Actualiza la vida máxima — llamado por GenerationManager al heredar stats
+        public void SetMaxHealth(float newMax)
+        {
+            _maxHealth = newMax;
+            _currentHealth = newMax; // el heredero empieza con vida completa
         }
     }
 }

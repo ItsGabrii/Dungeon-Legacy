@@ -184,6 +184,18 @@ namespace DungeonLegacy.Player
             ChangeState(_dead);
         }
 
+        /// Resetea el jugador para la nueva generación — llamado por GenerationManager
+        public void ResetForNewGeneration()
+        {
+            // Resetear animator
+            _ctx.Animator.SetBool("Dead", false);
+            _ctx.Animator.SetBool("IsGrounded", true);
+            _ctx.Animator.SetFloat("Speed", 0f);
+
+            // Volver al estado inicial
+            ChangeState(_idle);
+        }
+
         private void OnDrawGizmosSelected()
         {
             if (_groundCheck != null)

@@ -41,5 +41,11 @@ namespace DungeonLegacy.Player.Stats
         {
             _currentEnergy = Mathf.Min(_maxEnergy, _currentEnergy + amount);
         }
+
+        public void SetMaxEnergy(float newMax)
+        {
+            _maxEnergy = newMax;
+            _currentEnergy = newMax;
+        }
     }
 }
