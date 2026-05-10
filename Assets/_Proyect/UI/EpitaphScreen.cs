@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Collections;
 using DungeonLegacy.Generation;
 using DungeonLegacy.Managers;
 
@@ -49,9 +50,22 @@ namespace DungeonLegacy.UI
                                     $"Maná: {ancestor.MaxMana:F0}";
             _inheritanceText.text = $"Herencia del siguiente heredero:\n{inheritanceSummary}";
 
+            // Desactivar botón para evitar clicks accidentales al aparecer la pantalla
+            _continueButton.interactable = false;
+
             // Pausar el juego y mostrar panel
             Time.timeScale = 0f;
             _panel.SetActive(true);
+
+            // Activar el botón tras un pequeño delay
+            StartCoroutine(EnableButtonAfterDelay());
+        }
+
+        /// Activa el botón tras 0.5s para evitar clicks accidentales
+        private IEnumerator EnableButtonAfterDelay()
+        {
+            yield return new WaitForSecondsRealtime(0.5f);
+            _continueButton.interactable = true;
         }
 
         /// Oculta la pantalla y reanuda el juego

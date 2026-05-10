@@ -6,7 +6,7 @@ namespace DungeonLegacy.Player.States
     public class PlayerAttackState : IPlayerState
     {
         private float _attackDuration = 0.3f;
-        private float _attackRange = 0.4f;
+        private float _attackRange = 0.2f;
         private float _attackDamage = 20f;
         private float _energyCost = 10f;
         private float _timer;

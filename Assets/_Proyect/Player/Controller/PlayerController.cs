@@ -82,7 +82,6 @@ namespace DungeonLegacy.Player
                 return;
             }
 
-            
             if (!_dash.CanDash && _ctx.IsGrounded && _currentState != _dash)
                 _dash.CanDash = true;
 
@@ -145,8 +144,6 @@ namespace DungeonLegacy.Player
                 else
                     ChangeState(_idle);
             }
-
-          
         }
 
         private void HandleFlip()
@@ -187,10 +184,13 @@ namespace DungeonLegacy.Player
         /// Resetea el jugador para la nueva generación — llamado por GenerationManager
         public void ResetForNewGeneration()
         {
-            // Resetear animator
+            // Resetear parámetros del animator
             _ctx.Animator.SetBool("Dead", false);
             _ctx.Animator.SetBool("IsGrounded", true);
             _ctx.Animator.SetFloat("Speed", 0f);
+
+            // Forzar el Animator a Idle directamente sin esperar transiciones
+            _ctx.Animator.Play("Idle", 0, 0f);
 
             // Volver al estado inicial
             ChangeState(_idle);
@@ -206,7 +206,7 @@ namespace DungeonLegacy.Player
             if (_attackPoint != null)
             {
                 Gizmos.color = Color.red;
-                Gizmos.DrawWireSphere(_attackPoint.position, 0.4f);
+                Gizmos.DrawWireSphere(_attackPoint.position, 0.2f);
             }
         }
     }

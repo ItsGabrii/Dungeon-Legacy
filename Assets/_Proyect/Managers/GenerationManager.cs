@@ -4,6 +4,7 @@ using DungeonLegacy.Player;
 using DungeonLegacy.Player.Stats;
 using DungeonLegacy.Progression;
 using DungeonLegacy.UI;
+using System.Collections;
 using UnityEngine;
 
 namespace DungeonLegacy.Managers
@@ -72,10 +73,20 @@ namespace DungeonLegacy.Managers
             // Calcular resumen de herencia para mostrar en la pantalla de epitafio
             string inheritanceSummary = BuildInheritanceSummary();
 
+            // Esperar a que termine la animación de muerte antes de mostrar el epitafio
+            StartCoroutine(ShowEpitaphAfterDelay(record, inheritanceSummary));
+        }
+
+        /// Espera la duración de la animación de muerte antes de mostrar la pantalla
+        private IEnumerator ShowEpitaphAfterDelay(AncestorRecord record, string summary)
+        {
+            // WaitForSecondsRealtime ignora el timeScale — funciona aunque el juego esté pausado
+            yield return new WaitForSecondsRealtime(1.5f);
+
             // Mostrar pantalla de epitafio — la siguiente generación arranca al pulsar Continuar
             // Si no hay pantalla asignada, arranca directamente (útil para testing)
             if (_epitaphScreen != null)
-                _epitaphScreen.Show(record, inheritanceSummary, StartNextGeneration);
+                _epitaphScreen.Show(record, summary, StartNextGeneration);
             else
                 StartNextGeneration();
         }
