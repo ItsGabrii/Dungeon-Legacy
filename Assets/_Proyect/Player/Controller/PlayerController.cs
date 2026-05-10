@@ -54,6 +54,8 @@ namespace DungeonLegacy.Player
 
         private void Update()
         {
+            if (_ctx == null || _currentState == null) return; 
+
             _ctx.MoveInput = Input.GetAxisRaw("Horizontal");
 
             _ctx.IsGrounded = Physics2D.OverlapCircle(
@@ -91,6 +93,8 @@ namespace DungeonLegacy.Player
 
         private void FixedUpdate()
         {
+            if (_ctx == null || _currentState == null) return; 
+
             _currentState.FixedUpdate(_ctx);
         }
 

@@ -9,18 +9,19 @@ namespace DungeonLegacy.Enemies
         [Header("Stats")]
         [SerializeField] protected float _maxHealth = 80f;
         [SerializeField] protected float _moveSpeed = 3f;
-        [SerializeField] protected float _detectionRadius = 1f;  // radio en el que detecta al jugador
+        [SerializeField] protected float _detectionRadius = 1f;
         [SerializeField] protected float _attackDamage = 33f;
-        [SerializeField] protected float _attackRange = 0.5f;    // distancia m�nima para atacar
-        [SerializeField] protected float _attackCooldown = 1f;   // segundos entre ataques
+        [SerializeField] protected float _attackRange = 0.5f;
+        [SerializeField] protected float _attackCooldown = 1f;
 
         [Header("Capas")]
         [SerializeField] protected LayerMask _playerLayer;
 
         protected float _currentHealth;
         protected Rigidbody2D _rb;
-        protected Transform _player;  // referencia al jugador cuando est� en rango
-        protected float _attackTimer; // cuenta regresiva hasta el pr�ximo ataque
+        protected Animator _animator;
+        protected Transform _player;
+        protected float _attackTimer;
 
         public float MaxHealth => _maxHealth;
         public float CurrentHealth => _currentHealth;
@@ -31,6 +32,7 @@ namespace DungeonLegacy.Enemies
         {
             _currentHealth = _maxHealth;
             _rb = GetComponent<Rigidbody2D>();
+            _animator = GetComponent<Animator>();
         }
 
         protected virtual void Update()
@@ -38,8 +40,6 @@ namespace DungeonLegacy.Enemies
             if (IsDead) return;
 
             _attackTimer -= Time.deltaTime;
-
-            // Buscar al jugador en cada frame
             DetectPlayer();
 
             if (_player != null)
@@ -48,20 +48,22 @@ namespace DungeonLegacy.Enemies
 
                 if (dist <= _attackRange)
                 {
-                    // Jugador en rango � parar y atacar
+                    // Parar y atacar
                     _rb.linearVelocity = new Vector2(0, _rb.linearVelocity.y);
+                    _animator.SetFloat("Speed", 0f);
                     TryAttack();
                 }
                 else
                 {
-                    // Jugador detectado pero lejos � perseguir
+                    // Perseguir al jugador
                     Chase();
                 }
             }
             else
             {
-                // Sin jugador detectado � quedarse quieto
+                // Sin jugador — quedarse quieto
                 _rb.linearVelocity = new Vector2(0, _rb.linearVelocity.y);
+                _animator.SetFloat("Speed", 0f);
             }
         }
 
@@ -80,8 +82,15 @@ namespace DungeonLegacy.Enemies
         protected virtual void Chase()
         {
             if (_player == null) return;
+
             float dir = _player.position.x > transform.position.x ? 1f : -1f;
             _rb.linearVelocity = new Vector2(dir * _moveSpeed, _rb.linearVelocity.y);
+            _animator.SetFloat("Speed", Mathf.Abs(_rb.linearVelocity.x));
+
+            // Flip del sprite según dirección
+            Vector3 scale = transform.localScale;
+            scale.x = dir > 0 ? Mathf.Abs(scale.x) : -Mathf.Abs(scale.x);
+            transform.localScale = scale;
         }
 
         // Solo ataca si el cooldown ha terminado
@@ -89,13 +98,14 @@ namespace DungeonLegacy.Enemies
         {
             if (_attackTimer > 0) return;
             _attackTimer = _attackCooldown;
+            _animator.SetTrigger("Attack");
             Attack();
         }
 
         // Cada tipo de enemigo implementa su propio ataque
         protected abstract void Attack();
 
-        // Recibe da�o y aplica knockback � implementa IDamageable
+        // Recibe daño y aplica knockback — implementa IDamageable
         public void TakeDamage(float amount, Vector2 knockback = default)
         {
             if (IsDead) return;
@@ -109,15 +119,31 @@ namespace DungeonLegacy.Enemies
                 OnDeath?.Invoke();
                 Die();
             }
+            else
+            {
+                // Mostrar animación de daño
+                _animator.SetTrigger("Hurt");
+            }
         }
 
-        // Comportamiento al morir � las subclases pueden sobreescribirlo
+        // Comportamiento al morir
         protected virtual void Die()
         {
             _rb.linearVelocity = Vector2.zero;
-            gameObject.SetActive(false);
-        }
 
+            // Congelar físicas para que no caiga ni se mueva
+            _rb.gravityScale = 0f;
+            _rb.constraints = RigidbodyConstraints2D.FreezeAll;
+
+            // Convertir collider a trigger para que no bloquee al jugador
+            GetComponent<Collider2D>().isTrigger = true;
+
+            // Activar animación de muerte
+            _animator.SetBool("Dead", true);
+
+            // Destruir tras la animación
+            Destroy(gameObject, 3f);
+        }
 
         // Muestra la salud del enemigo en pantalla durante el Play
         private void OnGUI()
@@ -126,14 +152,12 @@ namespace DungeonLegacy.Enemies
 
             // Convierte la posición del enemigo a coordenadas de pantalla
             Vector3 screenPos = Camera.main.WorldToScreenPoint(transform.position);
-
-            // En OnGUI el eje Y está invertido respecto a la cámara
             screenPos.y = Screen.height - screenPos.y;
 
             GUIStyle style = new GUIStyle();
             style.fontSize = 14;
             style.fontStyle = FontStyle.Bold;
-            style.normal.textColor = _currentHealth > 40f ? Color.green : Color.red;
+            style.normal.textColor = _currentHealth > _maxHealth * 0.5f ? Color.green : Color.red;
 
             GUI.Label(
                 new Rect(screenPos.x + 20, screenPos.y - 20, 150, 30),
@@ -142,8 +166,7 @@ namespace DungeonLegacy.Enemies
             );
         }
 
-
-        // Dibuja los radios de detecci�n y ataque en la Scene view
+        // Dibuja los radios de detección y ataque en la Scene view
         private void OnDrawGizmosSelected()
         {
             Gizmos.color = Color.yellow;
