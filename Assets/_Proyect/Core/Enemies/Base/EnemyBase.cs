@@ -9,10 +9,16 @@ namespace DungeonLegacy.Enemies
         [Header("Stats")]
         [SerializeField] protected float _maxHealth = 80f;
         [SerializeField] protected float _moveSpeed = 3f;
-        [SerializeField] protected float _detectionRadius = 1f;
+        [SerializeField] protected float _detectionRadius = 5f;  
         [SerializeField] protected float _attackDamage = 33f;
-        [SerializeField] protected float _attackRange = 0.5f;
+        [SerializeField] protected float _attackRange = 0.8f;  
         [SerializeField] protected float _attackCooldown = 1f;
+        [SerializeField] protected float _chaseDuration = 3f;   
+
+        [Header("Patrulla")]
+        [SerializeField] private float _patrolRange = 3f;   
+        [SerializeField] private float _patrolSpeed = 1.5f; 
+        [SerializeField] private float _patrolWaitTime = 1.5f; 
 
         [Header("Capas")]
         [SerializeField] protected LayerMask _playerLayer;
@@ -22,6 +28,16 @@ namespace DungeonLegacy.Enemies
         protected Animator _animator;
         protected Transform _player;
         protected float _attackTimer;
+
+        // Timer de persecución — continúa cazando X segundos tras perder al jugador
+        private float _chaseTimer = 0f;
+        private Vector3 _lastKnownPlayerPos;
+
+        // Variables de patrulla
+        private Vector3 _patrolOrigin;
+        private float _patrolDir = 1f;
+        private float _patrolTimer = 0f;
+        private bool _isWaiting = false;
 
         public float MaxHealth => _maxHealth;
         public float CurrentHealth => _currentHealth;
@@ -33,6 +49,7 @@ namespace DungeonLegacy.Enemies
             _currentHealth = _maxHealth;
             _rb = GetComponent<Rigidbody2D>();
             _animator = GetComponent<Animator>();
+            _patrolOrigin = transform.position; 
         }
 
         protected virtual void Update()
@@ -40,30 +57,47 @@ namespace DungeonLegacy.Enemies
             if (IsDead) return;
 
             _attackTimer -= Time.deltaTime;
+            _chaseTimer -= Time.deltaTime;
+
             DetectPlayer();
 
             if (_player != null)
             {
+                // Jugador detectado — guardar última posición conocida y reiniciar chase timer
+                _lastKnownPlayerPos = _player.position;
+                _chaseTimer = _chaseDuration;
+
                 float dist = Vector2.Distance(transform.position, _player.position);
 
                 if (dist <= _attackRange)
                 {
-                    // Parar y atacar
+                    // En rango — parar y atacar
                     _rb.linearVelocity = new Vector2(0, _rb.linearVelocity.y);
                     _animator.SetFloat("Speed", 0f);
                     TryAttack();
                 }
                 else
                 {
-                    // Perseguir al jugador
+                    // Fuera de rango — perseguir
                     Chase();
+                }
+            }
+            else if (_chaseTimer > 0)
+            {
+                // Jugador fuera de rango pero aún persiguiendo hacia última posición conocida
+                float dist = Vector2.Distance(transform.position, _lastKnownPlayerPos);
+                if (dist > _attackRange)
+                    ChasePosition(_lastKnownPlayerPos);
+                else
+                {
+                    _rb.linearVelocity = new Vector2(0, _rb.linearVelocity.y);
+                    _animator.SetFloat("Speed", 0f);
                 }
             }
             else
             {
-                // Sin jugador — quedarse quieto
-                _rb.linearVelocity = new Vector2(0, _rb.linearVelocity.y);
-                _animator.SetFloat("Speed", 0f);
+                // Sin jugador ni memoria — patrullar
+                Patrol();
             }
         }
 
@@ -78,18 +112,66 @@ namespace DungeonLegacy.Enemies
             _player = hit != null ? hit.transform : null;
         }
 
-        // Mueve al enemigo horizontalmente hacia el jugador
+        // Persigue al jugador
         protected virtual void Chase()
         {
             if (_player == null) return;
+            ChasePosition(_player.position);
+        }
 
-            float dir = _player.position.x > transform.position.x ? 1f : -1f;
+        // Mueve al enemigo hacia una posición objetivo
+        private void ChasePosition(Vector3 target)
+        {
+            float dir = target.x > transform.position.x ? 1f : -1f;
             _rb.linearVelocity = new Vector2(dir * _moveSpeed, _rb.linearVelocity.y);
             _animator.SetFloat("Speed", Mathf.Abs(_rb.linearVelocity.x));
 
             // Flip del sprite según dirección
             Vector3 scale = transform.localScale;
             scale.x = dir > 0 ? Mathf.Abs(scale.x) : -Mathf.Abs(scale.x);
+            transform.localScale = scale;
+        }
+
+        // Patrulla de ida y vuelta alrededor del punto de origen
+        // Patrulla de ida y vuelta alrededor del punto de origen
+        private void Patrol()
+        {
+            if (_isWaiting)
+            {
+                _patrolTimer -= Time.deltaTime;
+                // Idle mientras espera — velocidad y animación a cero
+                _rb.linearVelocity = new Vector2(0, _rb.linearVelocity.y);
+                _animator.SetFloat("Speed", 0f);
+                if (_patrolTimer <= 0)
+                    _isWaiting = false;
+                return;
+            }
+
+            float targetX = _patrolOrigin.x + _patrolDir * _patrolRange;
+
+            // Comprobar si ha llegado O cruzado el objetivo según la dirección
+            bool reachedTarget = _patrolDir > 0
+                ? transform.position.x >= targetX
+                : transform.position.x <= targetX;
+
+            if (reachedTarget)
+            {
+                // Llegó al extremo — parar inmediatamente, esperar 1 segundo y girar
+                _rb.linearVelocity = new Vector2(0, _rb.linearVelocity.y);
+                _animator.SetFloat("Speed", 0f);
+                _patrolDir *= -1f;
+                _isWaiting = true;
+                _patrolTimer = 1f;
+                return;
+            }
+
+            // Moverse hacia el objetivo
+            _rb.linearVelocity = new Vector2(_patrolDir * _patrolSpeed, _rb.linearVelocity.y);
+            _animator.SetFloat("Speed", Mathf.Abs(_rb.linearVelocity.x));
+
+            // Flip del sprite
+            Vector3 scale = transform.localScale;
+            scale.x = _patrolDir > 0 ? Mathf.Abs(scale.x) : -Mathf.Abs(scale.x);
             transform.localScale = scale;
         }
 
@@ -105,14 +187,11 @@ namespace DungeonLegacy.Enemies
         // Cada tipo de enemigo implementa su propio ataque
         protected abstract void Attack();
 
-        // Recibe daño y aplica knockback — implementa IDamageable
+        // Recibe daño — el orco no recibe knockback
         public void TakeDamage(float amount, Vector2 knockback = default)
         {
             if (IsDead) return;
             _currentHealth = Mathf.Max(0, _currentHealth - amount);
-
-            if (knockback != Vector2.zero)
-                _rb.AddForce(knockback, ForceMode2D.Impulse);
 
             if (_currentHealth <= 0)
             {
@@ -121,7 +200,6 @@ namespace DungeonLegacy.Enemies
             }
             else
             {
-                // Mostrar animación de daño
                 _animator.SetTrigger("Hurt");
             }
         }
@@ -130,18 +208,10 @@ namespace DungeonLegacy.Enemies
         protected virtual void Die()
         {
             _rb.linearVelocity = Vector2.zero;
-
-            // Congelar físicas para que no caiga ni se mueva
             _rb.gravityScale = 0f;
             _rb.constraints = RigidbodyConstraints2D.FreezeAll;
-
-            // Convertir collider a trigger para que no bloquee al jugador
             GetComponent<Collider2D>().isTrigger = true;
-
-            // Activar animación de muerte
             _animator.SetBool("Dead", true);
-
-            // Destruir tras la animación
             Destroy(gameObject, 3f);
         }
 
@@ -150,7 +220,6 @@ namespace DungeonLegacy.Enemies
         {
             if (Camera.main == null) return;
 
-            // Convierte la posición del enemigo a coordenadas de pantalla
             Vector3 screenPos = Camera.main.WorldToScreenPoint(transform.position);
             screenPos.y = Screen.height - screenPos.y;
 
@@ -173,6 +242,13 @@ namespace DungeonLegacy.Enemies
             Gizmos.DrawWireSphere(transform.position, _detectionRadius);
             Gizmos.color = Color.red;
             Gizmos.DrawWireSphere(transform.position, _attackRange);
+
+            // Dibuja el rango de patrulla
+            Gizmos.color = Color.blue;
+            Gizmos.DrawLine(
+                _patrolOrigin + Vector3.left * _patrolRange,
+                _patrolOrigin + Vector3.right * _patrolRange
+            );
         }
     }
 }

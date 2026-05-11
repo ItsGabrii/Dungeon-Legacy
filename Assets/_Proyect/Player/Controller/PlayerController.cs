@@ -28,6 +28,10 @@ namespace DungeonLegacy.Player
         private PlayerAttackState _attack;
         private PlayerDashState _dash;
 
+        // Cooldown entre ataques del jugador
+        private float _attackCooldown = 0.5f;
+        private float _attackTimer = 0f;
+
         private void Awake()
         {
             _ctx = new PlayerContext(
@@ -54,7 +58,7 @@ namespace DungeonLegacy.Player
 
         private void Update()
         {
-            if (_ctx == null || _currentState == null) return; 
+            if (_ctx == null || _currentState == null) return;
 
             _ctx.MoveInput = Input.GetAxisRaw("Horizontal");
 
@@ -67,7 +71,10 @@ namespace DungeonLegacy.Player
 
             HandleFlip();
 
-            // Dash con Shift izquierdo — funciona en aire y suelo
+            // Reducir timer de ataque cada frame
+            _attackTimer -= Time.deltaTime;
+
+            // Dash con Shift izquierdo 
             if (Input.GetKeyDown(KeyCode.LeftShift) &&
                 _dash.CanDash &&
                 _currentState != _dead &&
@@ -77,10 +84,13 @@ namespace DungeonLegacy.Player
                 return;
             }
 
+            // Ataque con click izquierdo 
             if (Input.GetMouseButtonDown(0) &&
-                (_currentState == _idle || _currentState == _run))
+                (_currentState == _idle || _currentState == _run) &&
+                _attackTimer <= 0f)
             {
                 ChangeState(_attack);
+                _attackTimer = _attackCooldown;
                 return;
             }
 
@@ -93,7 +103,7 @@ namespace DungeonLegacy.Player
 
         private void FixedUpdate()
         {
-            if (_ctx == null || _currentState == null) return; 
+            if (_ctx == null || _currentState == null) return;
 
             _currentState.FixedUpdate(_ctx);
         }
@@ -188,6 +198,9 @@ namespace DungeonLegacy.Player
         /// Resetea el jugador para la nueva generación — llamado por GenerationManager
         public void ResetForNewGeneration()
         {
+            // Resetear timer de ataque
+            _attackTimer = 0f;
+
             // Resetear parámetros del animator
             _ctx.Animator.SetBool("Dead", false);
             _ctx.Animator.SetBool("IsGrounded", true);
@@ -210,7 +223,7 @@ namespace DungeonLegacy.Player
             if (_attackPoint != null)
             {
                 Gizmos.color = Color.red;
-                Gizmos.DrawWireSphere(_attackPoint.position, 0.2f);
+                Gizmos.DrawWireSphere(_attackPoint.position, 0.4f);
             }
         }
     }
