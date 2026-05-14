@@ -1,3 +1,5 @@
+using DungeonLegacy.Player;
+
 namespace DungeonLegacy.Progression
 {
     /// Datos del run actual — se resetean completamente al morir.
@@ -14,6 +16,8 @@ namespace DungeonLegacy.Progression
         public float AttackDamage { get; set; }
         public float MaxEnergy { get; set; }
         public float MaxMana { get; set; }
+        public PlayerClassType SelectedClass { get; set; }
+
 
         public RunData()
         {
@@ -26,6 +30,7 @@ namespace DungeonLegacy.Progression
             AttackDamage = 20f;
             MaxEnergy = 100f;
             MaxMana = 100f;
+            SelectedClass = PlayerClassType.Knight;
         }
 
         public void ResetRun(int newGeneration)

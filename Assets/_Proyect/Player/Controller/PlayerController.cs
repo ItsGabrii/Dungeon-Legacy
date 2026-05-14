@@ -16,6 +16,9 @@ namespace DungeonLegacy.Player
         [Header("Debug")]
         [SerializeField] private string _currentStateName;
 
+        [Header("Clase")]
+        [SerializeField] private PlayerClassType _playerClass = PlayerClassType.Knight;
+
         private PlayerContext _ctx;
         private IPlayerState _currentState;
 
@@ -25,10 +28,9 @@ namespace DungeonLegacy.Player
         private PlayerFallState _fall;
         private PlayerHurtState _hurt;
         private PlayerDeadState _dead;
-        private PlayerAttackState _attack;
+        private IPlayerState _attack;   
         private PlayerDashState _dash;
 
-        // Cooldown entre ataques del jugador
         private float _attackCooldown = 0.5f;
         private float _attackTimer = 0f;
 
@@ -50,8 +52,12 @@ namespace DungeonLegacy.Player
             _fall = new PlayerFallState();
             _hurt = new PlayerHurtState();
             _dead = new PlayerDeadState();
-            _attack = new PlayerAttackState();
             _dash = new PlayerDashState();
+
+            // Elige el estado de ataque según la clase
+            _attack = _playerClass == PlayerClassType.Knight
+                ? (IPlayerState)new PlayerAttackState()
+                : (IPlayerState)new MageAttackState();
 
             ChangeState(_idle);
         }
@@ -71,10 +77,9 @@ namespace DungeonLegacy.Player
 
             HandleFlip();
 
-            // Reducir timer de ataque cada frame
             _attackTimer -= Time.deltaTime;
 
-            // Dash con Shift izquierdo 
+            // Dash con Shift izquierdo
             if (Input.GetKeyDown(KeyCode.LeftShift) &&
                 _dash.CanDash &&
                 _currentState != _dead &&
@@ -84,7 +89,7 @@ namespace DungeonLegacy.Player
                 return;
             }
 
-            // Ataque con click izquierdo 
+            // Ataque con click izquierdo
             if (Input.GetMouseButtonDown(0) &&
                 (_currentState == _idle || _currentState == _run) &&
                 _attackTimer <= 0f)
@@ -104,7 +109,6 @@ namespace DungeonLegacy.Player
         private void FixedUpdate()
         {
             if (_ctx == null || _currentState == null) return;
-
             _currentState.FixedUpdate(_ctx);
         }
 
@@ -114,7 +118,11 @@ namespace DungeonLegacy.Player
 
             if (_currentState == _attack)
             {
-                if (_attack.IsFinished)
+                // Comprueba IsFinished según el tipo de ataque
+                bool finished = _attack is PlayerAttackState pa ? pa.IsFinished
+                              : _attack is MageAttackState ma ? ma.IsFinished
+                              : true;
+                if (finished)
                     ChangeState(_ctx.IsGrounded ? _idle : _fall);
                 return;
             }
@@ -177,7 +185,6 @@ namespace DungeonLegacy.Player
         private void ChangeState(IPlayerState newState)
         {
             if (newState == _currentState) return;
-
             _currentState?.Exit(_ctx);
             _currentState = newState;
             _currentState.Enter(_ctx);
@@ -195,21 +202,13 @@ namespace DungeonLegacy.Player
             ChangeState(_dead);
         }
 
-        /// Resetea el jugador para la nueva generación — llamado por GenerationManager
         public void ResetForNewGeneration()
         {
-            // Resetear timer de ataque
             _attackTimer = 0f;
-
-            // Resetear parámetros del animator
             _ctx.Animator.SetBool("Dead", false);
             _ctx.Animator.SetBool("IsGrounded", true);
             _ctx.Animator.SetFloat("Speed", 0f);
-
-            // Forzar el Animator a Idle directamente sin esperar transiciones
             _ctx.Animator.Play("Idle", 0, 0f);
-
-            // Volver al estado inicial
             ChangeState(_idle);
         }
 
@@ -225,6 +224,14 @@ namespace DungeonLegacy.Player
                 Gizmos.color = Color.red;
                 Gizmos.DrawWireSphere(_attackPoint.position, 0.4f);
             }
+        }
+
+        public void SetClass(PlayerClassType playerClass)
+        {
+            _playerClass = playerClass;
+            _attack = playerClass == PlayerClassType.Knight
+                ? (IPlayerState)new PlayerAttackState()
+                : (IPlayerState)new MageAttackState();
         }
     }
 }
