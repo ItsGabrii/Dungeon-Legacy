@@ -21,7 +21,7 @@ namespace DungeonLegacy.Player
         // Parámetros de movimiento
         public float MoveSpeed { get; set; } = 5f;
         public float JumpForce { get; set; } = 12f;
-        public float GroundCheckRadius { get; } = 0.1f;
+        public float GroundCheckRadius { get; } = 0.2f;
 
         // Estado en tiempo real
         public float MoveInput { get; set; }
