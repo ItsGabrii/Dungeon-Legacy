@@ -108,14 +108,18 @@ namespace DungeonLegacy.Managers
 
             // Resetear el run manteniendo la generación
             CurrentRun.ResetRun(nextGen);
+            CurrentRun.SelectedClass = Random.Range(0, 2) == 0
+                ? PlayerClassType.Knight
+                : PlayerClassType.Mage;
 
             // Aplicar stats heredados del ancestro (aleatorio)
             InheritanceResolver.ApplyInheritance(Legacy, CurrentRun);
 
-            // Aplicar los nuevos stats al jugador
+            // Aplicar los nuevos stats al jugador con delay para que la animación de muerte termine
             ApplyRunDataToPlayer();
 
             Debug.Log($"[GenerationManager] Generación {nextGen} iniciada — {CurrentRun}");
+            Debug.Log($"[GenerationManager] Clase heredero: {CurrentRun.SelectedClass}");
         }
 
         /// Aplica los stats del RunData a los componentes del jugador
@@ -131,12 +135,24 @@ namespace DungeonLegacy.Managers
             if (_playerMana != null)
                 _playerMana.SetMaxMana(CurrentRun.MaxMana);
 
-            // Resetear la FSM del jugador para que pueda moverse en la nueva generación
+            // Resetear la FSM y cambiar clase tras delay para que la animación de muerte se vea completa
             PlayerController playerController = _playerHealth.GetComponent<PlayerController>();
             if (playerController != null)
-                playerController.ResetForNewGeneration();
+                StartCoroutine(ResetAfterDelay(playerController));
 
             Debug.Log("[GenerationManager] Stats aplicados al jugador.");
+        }
+
+        /// Espera a que la animación de muerte termine antes de resetear al heredero
+        private IEnumerator ResetAfterDelay(PlayerController controller)
+        {
+            yield return null;
+
+            // Aplicar clase aleatoria al heredero
+            controller.SetClass(CurrentRun.SelectedClass);
+
+            // Resetear la FSM del jugador para que pueda moverse en la nueva generación
+            controller.ResetForNewGeneration();
         }
 
         /// Avanza de planta — llamado al completar una planta

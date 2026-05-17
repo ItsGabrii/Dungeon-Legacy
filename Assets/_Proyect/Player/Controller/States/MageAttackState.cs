@@ -1,6 +1,6 @@
 using UnityEngine;
-using DungeonLegacy.Combat;
 using DungeonLegacy.Player.Stats;
+using DungeonLegacy.Combat;
 
 namespace DungeonLegacy.Player.States
 {
@@ -9,15 +9,21 @@ namespace DungeonLegacy.Player.States
         private float _attackDuration = 0.4f;
         private float _manaCost = 1f;
         private float _timer;
-        private bool _projectileSpawned;
+        private bool _effectTriggered;
+        private int _currentAttack = 1;
 
         public bool IsFinished => _timer >= _attackDuration;
+
+        public void SetAttackIndex(int index)
+        {
+            _currentAttack = index;
+        }
 
         public void Enter(PlayerContext ctx)
         {
             _timer = 0f;
-            _projectileSpawned = false;
-            ctx.Animator.SetTrigger("Attack");
+            _effectTriggered = false;
+            ctx.Animator.SetTrigger("Attack1");
 
             ManaSystem mana = ctx.Transform.GetComponent<ManaSystem>();
             if (mana != null) mana.TryConsume(_manaCost);
@@ -27,32 +33,61 @@ namespace DungeonLegacy.Player.States
         {
             _timer += Time.deltaTime;
 
-            if (!_projectileSpawned && _timer >= _attackDuration * 0.3f)
+            if (!_effectTriggered && _timer >= _attackDuration * 0.3f)
             {
                 SpawnProjectile(ctx);
-                _projectileSpawned = true;
+                _effectTriggered = true;
             }
         }
 
         public void FixedUpdate(PlayerContext ctx) { }
+
         public void Exit(PlayerContext ctx) { }
 
         private void SpawnProjectile(PlayerContext ctx)
         {
-            GameObject prefab = Resources.Load<GameObject>("Prefabs/MageProjectile");
+            string prefabName = _currentAttack == 1 ? "Prefabs/Fireball" : "Prefabs/Crystal";
+            GameObject prefab = Resources.Load<GameObject>(prefabName);
             if (prefab == null)
             {
-                Debug.LogWarning("[MageAttackState] No se encontró el prefab MageProjectile en Resources/Prefabs/");
+                Debug.LogWarning($"[MageAttackState] No se encontró {prefabName}");
                 return;
             }
 
-            GameObject proj = GameObject.Instantiate(prefab, ctx.AttackPoint.position, Quaternion.identity);
-            Projectile projectile = proj.GetComponent<Projectile>();
-            if (projectile != null)
+            if (_currentAttack == 1)
             {
-                float dir = ctx.IsFacingRight ? 1f : -1f;
-                projectile.Initialize(dir, ctx.EnemyLayer);
+                // Bola de fuego — proyectil normal hacia adelante
+                GameObject proj = GameObject.Instantiate(prefab, ctx.AttackPoint.position, Quaternion.identity);
+                Projectile projectile = proj.GetComponent<Projectile>();
+                if (projectile != null)
+                {
+                    float dir = ctx.IsFacingRight ? 1f : -1f;
+                    projectile.Initialize(dir, ctx.EnemyLayer);
+                }
             }
+            else
+            {
+                // Cristal — spawnea en el enemigo más cercano dentro del rango
+                SpawnCrystal(ctx, prefab);
+            }
+        }
+
+        private void SpawnCrystal(PlayerContext ctx, GameObject prefab)
+        {
+            float crystalRange = 5f;
+            Collider2D hit = Physics2D.OverlapCircle(
+                ctx.Transform.position, crystalRange, ctx.EnemyLayer);
+
+            if (hit == null)
+            {
+                Debug.Log("[MageAttackState] No hay enemigo en rango para el cristal");
+                return;
+            }
+
+            GameObject crystal = GameObject.Instantiate(prefab, hit.transform.position, Quaternion.identity);
+            CrystalProjectile cp = crystal.GetComponent<CrystalProjectile>();
+            if (cp != null)
+                cp.Initialize(hit.gameObject, ctx.EnemyLayer);
         }
     }
 }

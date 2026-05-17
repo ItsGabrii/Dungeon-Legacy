@@ -861,10 +861,70 @@ PrefabInstance:
       propertyPath: m_Name
       value: Jugador
       objectReference: {fileID: 0}
+    - target: {fileID: 689127072762271404, guid: 982a32ff19418314d886092753c97810, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1254450914369593336, guid: 982a32ff19418314d886092753c97810, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.29761475
+      objectReference: {fileID: 0}
+    - target: {fileID: 1254450914369593336, guid: 982a32ff19418314d886092753c97810, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.29761475
+      objectReference: {fileID: 0}
+    - target: {fileID: 1254450914369593336, guid: 982a32ff19418314d886092753c97810, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1254450914369593336, guid: 982a32ff19418314d886092753c97810, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0.944
+      objectReference: {fileID: 0}
+    - target: {fileID: 1254450914369593336, guid: 982a32ff19418314d886092753c97810, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.876
+      objectReference: {fileID: 0}
+    - target: {fileID: 4711163403280430618, guid: 982a32ff19418314d886092753c97810, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: -8704788006095434069, guid: 2383669d2a12a75438b7e64ec5f0e333, type: 3}
+    - target: {fileID: 5497716455906165256, guid: 982a32ff19418314d886092753c97810, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6417220632144044322, guid: 982a32ff19418314d886092753c97810, type: 3}
       propertyPath: _playerClass
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 6417220632144044322, guid: 982a32ff19418314d886092753c97810, type: 3}
+      propertyPath: _mageAnimator
+      value: 
+      objectReference: {fileID: 9100000, guid: d0064c596aee7e5408b47ab6f1cc749c, type: 2}
+    - target: {fileID: 6417220632144044322, guid: 982a32ff19418314d886092753c97810, type: 3}
+      propertyPath: _knightAnimators.Array.size
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6417220632144044322, guid: 982a32ff19418314d886092753c97810, type: 3}
+      propertyPath: '_knightAnimators.Array.data[0]'
+      value: 
+      objectReference: {fileID: 9100000, guid: 6c7093523d7f5a94f8b2e7cb81e9fecc, type: 2}
+    - target: {fileID: 6417220632144044322, guid: 982a32ff19418314d886092753c97810, type: 3}
+      propertyPath: '_knightAnimators.Array.data[1]'
+      value: 
+      objectReference: {fileID: 9100000, guid: 01f29767501b07546aee3dd8278b50bf, type: 2}
+    - target: {fileID: 6417220632144044322, guid: 982a32ff19418314d886092753c97810, type: 3}
+      propertyPath: '_knightAnimators.Array.data[2]'
+      value: 
+      objectReference: {fileID: 9100000, guid: ec4c271a32214fd48b80b1df061e7c2d, type: 2}
+    - target: {fileID: 6417220632144044322, guid: 982a32ff19418314d886092753c97810, type: 3}
+      propertyPath: '_knightAnimators.Array.data[3]'
+      value: 
+      objectReference: {fileID: 9100000, guid: 084a46ccbb03f1f498ba747c0ea2b69c, type: 2}
+    - target: {fileID: 6417220632144044322, guid: 982a32ff19418314d886092753c97810, type: 3}
+      propertyPath: '_knightAnimators.Array.data[4]'
+      value: 
+      objectReference: {fileID: 9100000, guid: 01de5707f45bf184b9214295f76d50fa, type: 2}
     - target: {fileID: 7577674230781274963, guid: 982a32ff19418314d886092753c97810, type: 3}
       propertyPath: m_LocalScale.x
       value: 2.5
@@ -914,7 +974,9 @@ PrefabInstance:
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
-    m_RemovedGameObjects: []
+    m_RemovedGameObjects:
+    - {fileID: 5497716455906165256, guid: 982a32ff19418314d886092753c97810, type: 3}
+    - {fileID: 7922937743553302183, guid: 982a32ff19418314d886092753c97810, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 689127072762271404, guid: 982a32ff19418314d886092753c97810, type: 3}
@@ -6492,7 +6554,7 @@ TilemapRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
+  - {fileID: 2100000, guid: 329221ac416b23941aa4ba6b32d4cf87, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
