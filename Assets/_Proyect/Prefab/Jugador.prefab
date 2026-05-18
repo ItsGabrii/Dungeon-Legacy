@@ -14,7 +14,6 @@ GameObject:
   - component: {fileID: 1017470954192328677}
   - component: {fileID: 6417220632144044322}
   - component: {fileID: 4099951436279892637}
-  - component: {fileID: 8507970472034227200}
   - component: {fileID: 2796378117429987698}
   - component: {fileID: 2229562104201582049}
   - component: {fileID: 1900098880482133885}
@@ -170,6 +169,8 @@ MonoBehaviour:
     m_Bits: 128
   _currentStateName: 
   _playerClass: 0
+  _knightAnimators: []
+  _mageAnimator: {fileID: 0}
 --- !u!114 &4099951436279892637
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -183,18 +184,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _maxHealth: 100
---- !u!114 &8507970472034227200
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 689127072762271404}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0d3af69d5590a824382fa40cd71a6578, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &2796378117429987698
 MonoBehaviour:
   m_ObjectHideFlags: 0
