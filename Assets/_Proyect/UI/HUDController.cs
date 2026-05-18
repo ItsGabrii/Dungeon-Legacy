@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.SceneManagement;
 using DungeonLegacy.Managers;
 using DungeonLegacy.Player.Stats;
 
@@ -26,20 +27,39 @@ namespace DungeonLegacy.UI
         private ManaSystem _mana;
         private GenerationManager _gm;
 
+        private void Awake()
+        {
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
+        private void OnDestroy()
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            // Re-encontrar al jugador en la nueva escena
+            BuscarJugador();
+        }
+
         private void Start()
         {
-            try
-            {
-                _gm = ServiceLocator.Get<GenerationManager>();
-                GameObject jugador = GameObject.FindWithTag("Player");
-                if (jugador != null)
-                {
-                    _health = jugador.GetComponent<HealthComponent>();
-                    _energy = jugador.GetComponent<EnergySystem>();
-                    _mana = jugador.GetComponent<ManaSystem>();
-                }
-            }
+            BuscarJugador();
+        }
+
+        private void BuscarJugador()
+        {
+            try { _gm = ServiceLocator.Get<GenerationManager>(); }
             catch { }
+
+            GameObject jugador = GameObject.FindWithTag("Player");
+            if (jugador != null)
+            {
+                _health = jugador.GetComponent<HealthComponent>();
+                _energy = jugador.GetComponent<EnergySystem>();
+                _mana = jugador.GetComponent<ManaSystem>();
+            }
         }
 
         private void Update()
@@ -55,14 +75,16 @@ namespace DungeonLegacy.UI
             }
 
             // Energía o Maná según clase
-            bool esMago = _gm.CurrentRun.SelectedClass == DungeonLegacy.Player.PlayerClassType.Mage;
+            bool esMago = _gm.CurrentRun.SelectedClass ==
+                          DungeonLegacy.Player.PlayerClassType.Mage;
+
             if (esMago && _mana != null)
             {
                 _barraRecurso.maxValue = _mana.MaxMana;
                 _barraRecurso.value = _mana.CurrentMana;
                 _textoRecurso.text = $"{(int)_mana.CurrentMana}";
                 if (_fillRecurso != null)
-                    _fillRecurso.color = new Color(0f, 0.33f, 1f); // azul
+                    _fillRecurso.color = new Color(0f, 0.33f, 1f);
             }
             else if (_energy != null)
             {
@@ -70,7 +92,7 @@ namespace DungeonLegacy.UI
                 _barraRecurso.value = _energy.CurrentEnergy;
                 _textoRecurso.text = $"{(int)_energy.CurrentEnergy}";
                 if (_fillRecurso != null)
-                    _fillRecurso.color = new Color(1f, 0.8f, 0f); // amarillo
+                    _fillRecurso.color = new Color(1f, 0.8f, 0f);
             }
 
             // Oro y generación

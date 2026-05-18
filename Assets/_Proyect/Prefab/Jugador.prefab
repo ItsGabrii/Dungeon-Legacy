@@ -17,6 +17,7 @@ GameObject:
   - component: {fileID: 2796378117429987698}
   - component: {fileID: 2229562104201582049}
   - component: {fileID: 1900098880482133885}
+  - component: {fileID: 6982949695631784098}
   m_Layer: 6
   m_Name: Jugador
   m_TagString: Untagged
@@ -168,9 +169,14 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 128
   _currentStateName: 
-  _playerClass: 0
-  _knightAnimators: []
-  _mageAnimator: {fileID: 0}
+  _playerClass: 1
+  _knightAnimators:
+  - {fileID: 9100000, guid: 6c7093523d7f5a94f8b2e7cb81e9fecc, type: 2}
+  - {fileID: 9100000, guid: 01f29767501b07546aee3dd8278b50bf, type: 2}
+  - {fileID: 9100000, guid: ec4c271a32214fd48b80b1df061e7c2d, type: 2}
+  - {fileID: 9100000, guid: 084a46ccbb03f1f498ba747c0ea2b69c, type: 2}
+  - {fileID: 9100000, guid: 01de5707f45bf184b9214295f76d50fa, type: 2}
+  _mageAnimator: {fileID: 9100000, guid: d0064c596aee7e5408b47ab6f1cc749c, type: 2}
 --- !u!114 &4099951436279892637
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -258,6 +264,23 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 0.47190642, y: 0.54356444}
   m_EdgeRadius: 0
+--- !u!114 &6982949695631784098
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 689127072762271404}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d7669a66339b09a4cbb1e0cbcc6cb403, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _interactionRadius: 1.5
+  _interactableLayer:
+    serializedVersion: 2
+    m_Bits: 1024
+  _interactionText: {fileID: 0}
 --- !u!1 &4674715629159079039
 GameObject:
   m_ObjectHideFlags: 0

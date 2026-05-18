@@ -13,6 +13,9 @@ namespace DungeonLegacy.Managers
     /// Se registra en el ServiceLocator para que cualquier sistema pueda accederlo.
     public class GenerationManager : MonoBehaviour
     {
+        // Singleton — garantiza una sola instancia persistente entre escenas
+        private static GenerationManager _instance;
+
         // Datos persistentes entre runs — sobreviven a la muerte
         public LegacyData Legacy { get; private set; } = new LegacyData();
 
@@ -29,6 +32,15 @@ namespace DungeonLegacy.Managers
 
         private void Awake()
         {
+            // Prevenir duplicados al cambiar de escena
+            if (_instance != null && _instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            _instance = this;
+            DontDestroyOnLoad(gameObject);
+
             // Registrar en ServiceLocator para acceso global
             ServiceLocator.Register<GenerationManager>(this);
         }
@@ -36,6 +48,10 @@ namespace DungeonLegacy.Managers
         /// Inicializa el manager con las referencias del jugador
         public void Initialize(HealthComponent health, EnergySystem energy, ManaSystem mana)
         {
+            // Desuscribir evento anterior para evitar doble suscripción al cambiar de escena
+            if (_playerHealth != null)
+                _playerHealth.OnDeath -= HandlePlayerDeath;
+
             _playerHealth = health;
             _playerEnergy = energy;
             _playerMana = mana;
@@ -149,7 +165,7 @@ namespace DungeonLegacy.Managers
             yield return null;
 
             // Aplicar clase aleatoria al heredero
-            controller.SetClass(CurrentRun.SelectedClass);
+            controller.SetClassWithNewSkin(CurrentRun.SelectedClass);
 
             // Resetear la FSM del jugador para que pueda moverse en la nueva generación
             controller.ResetForNewGeneration();

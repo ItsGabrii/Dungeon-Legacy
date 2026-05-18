@@ -14,11 +14,16 @@ namespace DungeonLegacy.Player
 
         private void Awake()
         {
-            _textRect = _interactionText.GetComponent<RectTransform>();
+            // Null-safe — el texto puede no existir en DungeonScene
+            if (_interactionText != null)
+                _textRect = _interactionText.GetComponent<RectTransform>();
         }
 
         private void Update()
         {
+            // Si no hay texto disponible no procesar interacciones visuales
+            if (_interactionText == null) return;
+
             Collider2D hit = Physics2D.OverlapCircle(
                 transform.position, _interactionRadius, _interactableLayer);
 
@@ -27,7 +32,6 @@ namespace DungeonLegacy.Player
                 _currentTarget = hit.GetComponent<IInteractable>();
                 if (_currentTarget != null)
                 {
-                    // Posiciona el texto encima del objeto
                     Vector3 worldPos = hit.transform.position + Vector3.up * 1.2f;
                     Vector2 screenPos = Camera.main.WorldToScreenPoint(worldPos);
                     _textRect.position = screenPos;

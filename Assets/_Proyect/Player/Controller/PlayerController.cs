@@ -166,7 +166,7 @@ namespace DungeonLegacy.Player
 
             if (_currentState == _attack)
             {
-          
+                // Comprueba IsFinished según el tipo de ataque
                 bool finished = _attack is PlayerAttackState pa ? pa.IsFinished
                               : _attack is MageAttackState ma ? ma.IsFinished
                               : true;
@@ -266,6 +266,7 @@ namespace DungeonLegacy.Player
             ChangeState(_idle);
         }
 
+        /// Aplica la clase preservando el skin actual — usado al transicionar entre escenas
         public void SetClass(PlayerClassType playerClass)
         {
             _playerClass = playerClass;
@@ -273,12 +274,18 @@ namespace DungeonLegacy.Player
                 ? (IPlayerState)new PlayerAttackState()
                 : (IPlayerState)new MageAttackState();
 
-            // Elegir skin aleatoria solo al cambiar de generación con clase Knight
+            // Cambiar Animator Controller según clase sin randomizar skin
+            ApplyAnimator(playerClass);
+        }
+
+        /// Aplica la clase con un skin aleatorio — usado solo al iniciar nueva generación
+        public void SetClassWithNewSkin(PlayerClassType playerClass)
+        {
+            // Elegir skin aleatoria para el nuevo heredero Knight
             if (playerClass == PlayerClassType.Knight && _knightAnimators != null && _knightAnimators.Length > 0)
                 _currentKnightSkinIndex = Random.Range(0, _knightAnimators.Length);
 
-            // Cambiar Animator Controller según clase
-            ApplyAnimator(playerClass);
+            SetClass(playerClass);
         }
 
         private void ApplyAnimator(PlayerClassType playerClass)
@@ -299,6 +306,8 @@ namespace DungeonLegacy.Player
             if (selected != null && _ctx.Animator.runtimeAnimatorController != selected)
                 _ctx.Animator.runtimeAnimatorController = selected;
         }
+
+
 
         private void OnDrawGizmosSelected()
         {

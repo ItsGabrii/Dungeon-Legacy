@@ -26,8 +26,19 @@ namespace DungeonLegacy.UI
         // Acción que se ejecuta al pulsar Continuar
         private System.Action _onContinue;
 
+        private static EpitaphScreen _instance;
+
         private void Awake()
         {
+            // Prevenir duplicados al cambiar de escena
+            if (_instance != null && _instance != this)
+            {
+                Destroy(gameObject);
+                return;
+            }
+            _instance = this;
+            DontDestroyOnLoad(gameObject);
+
             // Ocultar panel al inicio
             _panel.SetActive(false);
 
