@@ -32,7 +32,11 @@ namespace DungeonLegacy.Player
                 _currentTarget = hit.GetComponent<IInteractable>();
                 if (_currentTarget != null)
                 {
-                    Vector3 worldPos = hit.transform.position + Vector3.up * 1.2f;
+                  
+                    Transform promptPoint = hit.transform.Find("TextPromptPoint");
+                    Vector3 worldPos = promptPoint != null
+                        ? promptPoint.position
+                        : hit.transform.position + Vector3.up * 0.8f;
                     Vector2 screenPos = Camera.main.WorldToScreenPoint(worldPos);
                     _textRect.position = screenPos;
 
