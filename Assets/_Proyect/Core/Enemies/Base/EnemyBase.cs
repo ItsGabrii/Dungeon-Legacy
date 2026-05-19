@@ -1,5 +1,7 @@
-using UnityEngine;
 using System;
+using DungeonLegacy.Combat;
+using DungeonLegacy.Managers;
+using UnityEngine;
 
 namespace DungeonLegacy.Enemies
 {
@@ -9,16 +11,17 @@ namespace DungeonLegacy.Enemies
         [Header("Stats")]
         [SerializeField] protected float _maxHealth = 80f;
         [SerializeField] protected float _moveSpeed = 3f;
-        [SerializeField] protected float _detectionRadius = 5f;  
+        [SerializeField] protected float _detectionRadius = 5f;
         [SerializeField] protected float _attackDamage = 33f;
-        [SerializeField] protected float _attackRange = 0.8f;  
+        [SerializeField] protected float _attackRange = 0.8f;
         [SerializeField] protected float _attackCooldown = 1f;
-        [SerializeField] protected float _chaseDuration = 3f;   
+        [SerializeField] protected float _chaseDuration = 3f;
+        [SerializeField] protected float _goldDrop = 10f;
 
         [Header("Patrulla")]
-        [SerializeField] private float _patrolRange = 3f;   
-        [SerializeField] private float _patrolSpeed = 1.5f; 
-        [SerializeField] private float _patrolWaitTime = 1.5f; 
+        [SerializeField] private float _patrolRange = 3f;
+        [SerializeField] private float _patrolSpeed = 1.5f;
+        [SerializeField] private float _patrolWaitTime = 1.5f;
 
         [Header("Capas")]
         [SerializeField] protected LayerMask _playerLayer;
@@ -49,7 +52,7 @@ namespace DungeonLegacy.Enemies
             _currentHealth = _maxHealth;
             _rb = GetComponent<Rigidbody2D>();
             _animator = GetComponent<Animator>();
-            _patrolOrigin = transform.position; 
+            _patrolOrigin = transform.position;
         }
 
         protected virtual void Update()
@@ -133,7 +136,6 @@ namespace DungeonLegacy.Enemies
         }
 
         // Patrulla de ida y vuelta alrededor del punto de origen
-        // Patrulla de ida y vuelta alrededor del punto de origen
         private void Patrol()
         {
             if (_isWaiting)
@@ -204,7 +206,7 @@ namespace DungeonLegacy.Enemies
             }
         }
 
-        // Comportamiento al morir
+        // Comportamiento al morir — spawnea monedas y destruye el GameObject
         protected virtual void Die()
         {
             _rb.linearVelocity = Vector2.zero;
@@ -212,7 +214,42 @@ namespace DungeonLegacy.Enemies
             _rb.constraints = RigidbodyConstraints2D.FreezeAll;
             GetComponent<Collider2D>().isTrigger = true;
             _animator.SetBool("Dead", true);
+
+            // Spawnear monedas con valor aleatorio total entre 10 y 30
+            SpawnCoins();
+
             Destroy(gameObject, 3f);
+        }
+
+        /// Spawnea entre 2 y 5 monedas con valor total aleatorio entre 10 y 30
+        private void SpawnCoins()
+        {
+            GameObject coinPrefab = Resources.Load<GameObject>("Prefabs/Coin");
+
+            Debug.Log($"[EnemyBase] SpawnCoins — prefab: {(coinPrefab != null ? "encontrado" : "NULL")}");
+
+            if (coinPrefab == null) return;
+
+            int coinCount = UnityEngine.Random.Range(2, 6);
+            float totalGold = UnityEngine.Random.Range(10f, 31f);
+            float goldPerCoin = totalGold / coinCount;
+
+            for (int i = 0; i < coinCount; i++)
+            {
+                GameObject Coin = Instantiate(coinPrefab, transform.position, Quaternion.identity);
+
+                // Inicializar valor de la moneda
+                Coin.GetComponent<CoinDrop>()?.Initialize(goldPerCoin);
+
+                // Fuerza aleatoria para que salgan dispersas
+                Rigidbody2D rb = Coin.GetComponent<Rigidbody2D>();
+                if (rb != null)
+                {
+                    float forceX = UnityEngine.Random.Range(-3f, 3f);
+                    float forceY = UnityEngine.Random.Range(3f, 6f);
+                    rb.AddForce(new Vector2(forceX, forceY), ForceMode2D.Impulse);
+                }
+            }
         }
 
         // Muestra la salud del enemigo en pantalla durante el Play
