@@ -307,6 +307,12 @@ namespace DungeonLegacy.Player
                 _ctx.Animator.runtimeAnimatorController = selected;
         }
 
+        /// Aplica stats de movimiento y combate al contexto del jugador
+        public void ApplyStats(float moveSpeed, float attackDamage)
+        {
+            _ctx.MoveSpeed = moveSpeed;
+            _ctx.AttackDamage = attackDamage;
+        }
 
 
         private void OnDrawGizmosSelected()

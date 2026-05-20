@@ -4,6 +4,7 @@ using DungeonLegacy.Player;
 using DungeonLegacy.Player.Stats;
 using DungeonLegacy.Progression;
 using DungeonLegacy.UI;
+using DungeonLegacy.Progression;
 using System.Collections;
 using UnityEngine;
 
@@ -183,6 +184,42 @@ namespace DungeonLegacy.Managers
         {
             CurrentRun.AddGold(amount);
         }
+
+        /// Aplica una bendición al run actual y al jugador inmediatamente
+        public void ApplyBlessing(BlessingData blessing)
+        {
+            float multiplier = 1f + blessing.BonusPercent / 100f;
+
+            switch (blessing.Type)
+            {
+                case BlessingType.MaxHealth:
+                    CurrentRun.MaxHealth *= multiplier;
+                    _playerHealth?.SetMaxHealth(CurrentRun.MaxHealth);
+                    break;
+
+                case BlessingType.MoveSpeed:
+                    CurrentRun.MoveSpeed *= multiplier;
+                    _playerHealth?.GetComponent<PlayerController>()
+                                  .ApplyStats(CurrentRun.MoveSpeed, CurrentRun.AttackDamage);
+                    break;
+
+                case BlessingType.AttackDamage:
+                    CurrentRun.AttackDamage *= multiplier;
+                    _playerHealth?.GetComponent<PlayerController>()
+                                  .ApplyStats(CurrentRun.MoveSpeed, CurrentRun.AttackDamage);
+                    break;
+
+                case BlessingType.MaxResource:
+                    CurrentRun.MaxEnergy *= multiplier;
+                    CurrentRun.MaxMana *= multiplier;
+                    _playerEnergy?.SetMaxEnergy(CurrentRun.MaxEnergy);
+                    _playerMana?.SetMaxMana(CurrentRun.MaxMana);
+                    break;
+            }
+
+            Debug.Log($"[GenerationManager] Bendición aplicada: {blessing.DisplayName} +{blessing.BonusPercent:F0}%");
+        }
+
 
         private void OnDestroy()
         {

@@ -23,13 +23,15 @@ namespace DungeonLegacy.Player
         public float JumpForce { get; set; } = 12f;
         public float GroundCheckRadius { get; } = 0.2f;
 
+        // Parámetros de combate
+        public float AttackDamage { get; set; } = 20f;
+
         // Estado en tiempo real
         public float MoveInput { get; set; }
         public bool IsGrounded { get; set; }
         public bool IsFacingRight { get; set; } = true;
 
         private PlayerAttackState _attack;
-
         public float DefaultGravityScale { get; }
 
         public PlayerContext(
@@ -48,7 +50,7 @@ namespace DungeonLegacy.Player
             AttackPoint = attackPoint;
             GroundLayer = groundLayer;
             EnemyLayer = enemyLayer;
-            DefaultGravityScale = rb.gravityScale; 
+            DefaultGravityScale = rb.gravityScale;
         }
     }
 }

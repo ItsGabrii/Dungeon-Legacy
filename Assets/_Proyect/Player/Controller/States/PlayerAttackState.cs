@@ -7,7 +7,6 @@ namespace DungeonLegacy.Player.States
     {
         private float _attackDuration = 0.3f;
         private float _attackRange = 0.4f;
-        private float _attackDamage = 20f;
         private float _energyCost = 10f;
         private float _playerPushback = 4f;
 
@@ -57,9 +56,9 @@ namespace DungeonLegacy.Player.States
 
         private void ApplyDamage(PlayerContext ctx)
         {
-            // Ataque 3 tiene más rango y daño
+            // Ataque 3 tiene más rango y daño — lee el daño base del contexto
             float range = _currentAttack == 3 ? _attackRange * 1.5f : _attackRange;
-            float damage = _currentAttack == 3 ? _attackDamage * 1.5f : _attackDamage;
+            float damage = _currentAttack == 3 ? ctx.AttackDamage * 1.5f : ctx.AttackDamage;
 
             Collider2D[] hits = Physics2D.OverlapCircleAll(
                 ctx.AttackPoint.position, range, ctx.EnemyLayer);
