@@ -4,9 +4,9 @@ using DungeonLegacy.Player;
 using DungeonLegacy.Player.Stats;
 using DungeonLegacy.Progression;
 using DungeonLegacy.UI;
-using DungeonLegacy.Progression;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace DungeonLegacy.Managers
 {
@@ -160,16 +160,40 @@ namespace DungeonLegacy.Managers
             Debug.Log("[GenerationManager] Stats aplicados al jugador.");
         }
 
-        /// Espera a que la animación de muerte termine antes de resetear al heredero
+        /// Espera a que la animación de muerte termine, resetea al heredero y vuelve a BaseScene
         private IEnumerator ResetAfterDelay(PlayerController controller)
         {
             yield return null;
 
-            // Aplicar clase aleatoria al heredero
+            // Aplicar clase aleatoria al heredero con nuevo skin
             controller.SetClassWithNewSkin(CurrentRun.SelectedClass);
 
-            // Resetear la FSM del jugador para que pueda moverse en la nueva generación
+            // Resetear la FSM del jugador
             controller.ResetForNewGeneration();
+
+            // Resetear contador de salas para la nueva run
+            try
+            {
+                var rm = ServiceLocator.Get<RoomManager>();
+                if (rm != null) rm.ResetRooms();
+            }
+            catch { }
+
+            // Volver a BaseScene para la nueva generación
+            CargarEscena("BaseScene");
+        }
+
+        /// Carga una escena usando SceneTransitionManager si está disponible, o directamente
+        private void CargarEscena(string sceneName)
+        {
+            try
+            {
+                var stm = ServiceLocator.Get<SceneTransitionManager>();
+                if (stm != null) { stm.LoadScene(sceneName); return; }
+            }
+            catch { }
+
+            SceneManager.LoadScene(sceneName);
         }
 
         /// Avanza de planta — llamado al completar una planta
@@ -219,7 +243,6 @@ namespace DungeonLegacy.Managers
 
             Debug.Log($"[GenerationManager] Bendición aplicada: {blessing.DisplayName} +{blessing.BonusPercent:F0}%");
         }
-
 
         private void OnDestroy()
         {

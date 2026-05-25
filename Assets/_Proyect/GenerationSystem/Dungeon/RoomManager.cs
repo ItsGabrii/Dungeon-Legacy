@@ -72,6 +72,14 @@ namespace DungeonLegacy.Generation
             }
         }
 
+        /// Resetea el contador de salas — llamado al morir el jugador
+        public void ResetRooms()
+        {
+            _roomsCompleted = 0;
+            _lastRoomIndex = -1;
+            Debug.Log("[RoomManager] Salas reseteadas.");
+        }
+
         private void CargarEscena(string sceneName)
         {
             try

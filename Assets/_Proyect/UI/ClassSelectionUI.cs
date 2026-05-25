@@ -18,7 +18,8 @@ namespace DungeonLegacy.UI
         {
             _gm = ServiceLocator.Get<GenerationManager>();
 
-            if (_gm.CurrentRun.CurrentGeneration == 1)
+            // Mostrar selección solo si el jugador aún no ha elegido clase en este run
+            if (!_gm.CurrentRun.ClassSelected)
             {
                 _panel.SetActive(true);
                 // Desactivar el PlayerController mientras se elige clase
@@ -34,12 +35,13 @@ namespace DungeonLegacy.UI
         private void SelectClass(PlayerClassType playerClass)
         {
             _gm.CurrentRun.SelectedClass = playerClass;
+            _gm.CurrentRun.ClassSelected = true;
 
             var controller = FindObjectOfType<PlayerController>();
             if (controller != null)
             {
                 controller.SetClass(playerClass);
-                controller.enabled = true; // Reactivar el jugador
+                controller.enabled = true;
             }
 
             _panel.SetActive(false);

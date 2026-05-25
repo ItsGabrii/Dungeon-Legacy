@@ -1,6 +1,6 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using TMPro;
-using UnityEngine.SceneManagement;
+using DungeonLegacy.UI;
 
 namespace DungeonLegacy.Player
 {
@@ -8,57 +8,23 @@ namespace DungeonLegacy.Player
     {
         [SerializeField] private float _interactionRadius = 1.5f;
         [SerializeField] private LayerMask _interactableLayer;
-        [SerializeField] private TextMeshProUGUI _interactionText;
 
         private IInteractable _currentTarget;
+        private TextMeshProUGUI _interactionText;
         private RectTransform _textRect;
-
-        private void Awake()
-        {
-            // Null-safe — el texto puede no existir aún en Awake
-            if (_interactionText != null)
-                _textRect = _interactionText.GetComponent<RectTransform>();
-        }
-
-        private void Start()
-        {
-            // Buscar el InteractionText dinámicamente si no está asignado
-            // Necesario porque vive en el HUDCanvas (DontDestroyOnLoad) y no se puede serializar entre escenas
-            if (_interactionText == null)
-                BuscarInteractionText();
-        }
-
-        private void OnEnable()
-        {
-            SceneManager.sceneLoaded += OnSceneLoaded;
-        }
-
-        private void OnDisable()
-        {
-            SceneManager.sceneLoaded -= OnSceneLoaded;
-        }
-
-        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
-        {
-            // Re-buscar el texto al cambiar de escena por si la referencia se perdió
-            if (_interactionText == null)
-                BuscarInteractionText();
-        }
-
-        /// Busca el InteractionText por nombre en todos los canvas activos
-        private void BuscarInteractionText()
-        {
-            GameObject obj = GameObject.Find("InteractionText");
-            if (obj != null)
-            {
-                _interactionText = obj.GetComponent<TextMeshProUGUI>();
-                if (_interactionText != null)
-                    _textRect = _interactionText.GetComponent<RectTransform>();
-            }
-        }
 
         private void Update()
         {
+
+            
+
+            // Obtener referencia al texto via singleton â€” siempre actualizada
+            if (InteractionTextUI.Instance != null && _interactionText == null)
+            {
+                _interactionText = InteractionTextUI.Instance.GetComponent<TextMeshProUGUI>();
+                _textRect = InteractionTextUI.Instance.GetComponent<RectTransform>();
+            }
+
             // Si no hay texto disponible no procesar interacciones visuales
             if (_interactionText == null) return;
 
@@ -79,7 +45,6 @@ namespace DungeonLegacy.Player
                     _textRect.position = screenPos;
 
                     _interactionText.text = _currentTarget.InteractionPrompt;
-                    _interactionText.gameObject.SetActive(true);
 
                     if (Input.GetKeyDown(KeyCode.E))
                         _currentTarget.Interact(gameObject);
@@ -89,7 +54,7 @@ namespace DungeonLegacy.Player
             }
 
             _currentTarget = null;
-            _interactionText.gameObject.SetActive(false);
+            _interactionText.text = "";
         }
     }
 }

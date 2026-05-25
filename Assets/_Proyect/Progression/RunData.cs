@@ -16,8 +16,11 @@ namespace DungeonLegacy.Progression
         public float AttackDamage { get; set; }
         public float MaxEnergy { get; set; }
         public float MaxMana { get; set; }
+
         public PlayerClassType SelectedClass { get; set; }
 
+        // Indica si el jugador ya eligió clase — solo se muestra al inicio del juego
+        public bool ClassSelected { get; set; }
 
         public RunData()
         {
@@ -31,6 +34,7 @@ namespace DungeonLegacy.Progression
             MaxEnergy = 100f;
             MaxMana = 100f;
             SelectedClass = PlayerClassType.Knight;
+            ClassSelected = false;
         }
 
         public void ResetRun(int newGeneration)
@@ -38,10 +42,10 @@ namespace DungeonLegacy.Progression
             CurrentGeneration = newGeneration;
             CurrentFloor = 1;
             CurrentGold = 0f;
+            // ClassSelected no se resetea — la clase del heredero se asigna aleatoriamente
         }
 
         public void AdvanceFloor() => CurrentFloor++;
-
         public void AddGold(float amount) => CurrentGold += amount;
 
         public override string ToString()
