@@ -49,7 +49,6 @@ namespace DungeonLegacy.Managers
         /// Inicializa el manager con las referencias del jugador
         public void Initialize(HealthComponent health, EnergySystem energy, ManaSystem mana)
         {
-            // Desuscribir evento anterior para evitar doble suscripción al cambiar de escena
             if (_playerHealth != null)
                 _playerHealth.OnDeath -= HandlePlayerDeath;
 
@@ -57,8 +56,12 @@ namespace DungeonLegacy.Managers
             _playerEnergy = energy;
             _playerMana = mana;
 
-            // Suscribirse al evento de muerte del jugador
             _playerHealth.OnDeath += HandlePlayerDeath;
+
+            // Aplicar stats del run actual al jugador recién inicializado
+            _playerHealth.SetMaxHealth(CurrentRun.MaxHealth);
+            _playerEnergy.SetMaxEnergy(CurrentRun.MaxEnergy);
+            _playerMana.SetMaxMana(CurrentRun.MaxMana);
 
             Debug.Log($"[GenerationManager] Inicializado — {CurrentRun}");
         }

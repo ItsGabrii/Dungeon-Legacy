@@ -1,8 +1,10 @@
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.SceneManagement;
 using DungeonLegacy.Managers;
+using DungeonLegacy.Player;
 using DungeonLegacy.Player.Stats;
 
 namespace DungeonLegacy.UI
@@ -37,17 +39,25 @@ namespace DungeonLegacy.UI
             SceneManager.sceneLoaded -= OnSceneLoaded;
         }
 
-        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
-        {
-            // Re-encontrar al jugador en la nueva escena
-            BuscarJugador();
-        }
-
         private void Start()
         {
+            StartCoroutine(BuscarJugadorConDelay());
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            // Esperar un frame para que GameBootstrap aplique los stats antes de leer referencias
+            StartCoroutine(BuscarJugadorConDelay());
+        }
+
+        /// Espera un frame para que GameBootstrap haya aplicado los stats al jugador
+        private IEnumerator BuscarJugadorConDelay()
+        {
+            yield return null;
             BuscarJugador();
         }
 
+        /// Localiza al jugador en la escena actual y obtiene sus componentes de stats
         private void BuscarJugador()
         {
             try { _gm = ServiceLocator.Get<GenerationManager>(); }
@@ -74,10 +84,8 @@ namespace DungeonLegacy.UI
                 _textoVida.text = $"{(int)_health.CurrentHealth}";
             }
 
-            // Energía o Maná según clase
-            bool esMago = _gm.CurrentRun.SelectedClass ==
-                          DungeonLegacy.Player.PlayerClassType.Mage;
-
+            // Energía o Maná según clase activa
+            bool esMago = _gm.CurrentRun.SelectedClass == PlayerClassType.Mage;
             if (esMago && _mana != null)
             {
                 _barraRecurso.maxValue = _mana.MaxMana;
