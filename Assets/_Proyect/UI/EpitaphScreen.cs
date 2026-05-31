@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using System.Collections;
@@ -7,8 +7,7 @@ using DungeonLegacy.Managers;
 
 namespace DungeonLegacy.UI
 {
-    /// Pantalla que aparece al morir mostrando los datos del ancestro.
-    /// Se activa desde GenerationManager y desaparece al pulsar Continuar.
+    /// Pantalla que aparece al morir mostrando los datos del ancestro y la herencia del heredero.
     public class EpitaphScreen : MonoBehaviour
     {
         [Header("Panel")]
@@ -20,17 +19,14 @@ namespace DungeonLegacy.UI
         [SerializeField] private TMP_Text _statsText;
         [SerializeField] private TMP_Text _inheritanceText;
 
-        [Header("Bot�n")]
+        [Header("Botón")]
         [SerializeField] private Button _continueButton;
 
-        // Acci�n que se ejecuta al pulsar Continuar
         private System.Action _onContinue;
-
         private static EpitaphScreen _instance;
 
         private void Awake()
         {
-            // Prevenir duplicados al cambiar de escena
             if (_instance != null && _instance != this)
             {
                 Destroy(gameObject);
@@ -38,54 +34,53 @@ namespace DungeonLegacy.UI
             }
             _instance = this;
             DontDestroyOnLoad(gameObject);
-
-            // Ocultar panel al inicio
             _panel.SetActive(false);
-
-            // Conectar bot�n
             _continueButton.onClick.AddListener(OnContinuePressed);
         }
 
-        /// Muestra la pantalla con los datos del ancestro
+        /// Muestra la pantalla con los datos del ancestro y la herencia pre-calculada
         public void Show(AncestorRecord ancestor, string inheritanceSummary, System.Action onContinue)
         {
             _onContinue = onContinue;
 
-            // Rellenar textos con datos del ancestro
-            _generationText.text = $"Generaci�n {ancestor.GenerationNumber}";
-            _floorText.text = $"Planta m�s alta alcanzada: {ancestor.FloorReached}";
-            _statsText.text = $"Vida: {ancestor.MaxHealth:F0}  " +
-                                    $"Da�o: {ancestor.AttackDamage:F0}  " +
-                                    $"Vel: {ancestor.MoveSpeed:F1}\n" +
-                                    $"Energ�a: {ancestor.MaxEnergy:F0}  " +
-                                    $"Man�: {ancestor.MaxMana:F0}";
-            _inheritanceText.text = $"Herencia del siguiente heredero:\n{inheritanceSummary}";
+            // ── Título ────────────────────────────────────────────────────────
+            _generationText.text = $"Generación {ancestor.GenerationNumber}";
 
-            // Desactivar bot�n para evitar clicks accidentales al aparecer la pantalla
+            // ── Resumen del run ───────────────────────────────────────────────
+            _floorText.text =
+                $"Planta alcanzada: {ancestor.FloorReached}     " +
+                $"Enemigos eliminados: {ancestor.EnemiesKilled}     " +
+                $"Oro recogido: {ancestor.GoldCollected:F0}";
+
+            // ── Stats del ancestro ────────────────────────────────────────────
+            _statsText.text =
+                "— STATS DEL JUGADOR —\n" +
+                $"Vida: {ancestor.MaxHealth:F0}          Daño: {ancestor.AttackDamage:F0}\n" +
+                $"Velocidad: {ancestor.MoveSpeed:F1}      Salto: {ancestor.JumpForce:F1}\n" +
+                $"Energía: {ancestor.MaxEnergy:F0}        Maná: {ancestor.MaxMana:F0}";
+
+            // ── Herencia del heredero ─────────────────────────────────────────
+            _inheritanceText.text =
+                "— HERENCIA DEL HEREDERO —\n" +
+                inheritanceSummary;
+
+            // Desactivar botón brevemente para evitar clicks accidentales
             _continueButton.interactable = false;
-
-            // Pausar el juego y mostrar panel
             Time.timeScale = 0f;
             _panel.SetActive(true);
-
-            // Activar el bot�n tras un peque�o delay
             StartCoroutine(EnableButtonAfterDelay());
         }
 
-        /// Activa el bot�n tras 0.5s para evitar clicks accidentales
         private IEnumerator EnableButtonAfterDelay()
         {
             yield return new WaitForSecondsRealtime(0.5f);
             _continueButton.interactable = true;
         }
 
-        /// Oculta la pantalla y reanuda el juego
         private void OnContinuePressed()
         {
             _panel.SetActive(false);
             Time.timeScale = 1f;
-
-            // Ejecutar la acci�n de continuar (siguiente generaci�n)
             _onContinue?.Invoke();
         }
     }

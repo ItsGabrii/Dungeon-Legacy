@@ -86,21 +86,22 @@ namespace DungeonLegacy.Player
                 ? (IPlayerState)new PlayerAttackState()
                 : (IPlayerState)new MageAttackState();
 
-            // Aplicar animator inicial según la clase configurada en el Inspector
             ApplyAnimator(_playerClass);
-
             ChangeState(_idle);
         }
 
         private void Start()
         {
-            // Aplicar la clase guardada en RunData al iniciar cualquier escena
-            // Garantiza que el jugador mantiene su clase al transicionar entre escenas
+            // Restaurar clase y skin guardados en RunData al cargar cualquier escena
             try
             {
                 var gm = ServiceLocator.Get<GenerationManager>();
                 if (gm != null)
+                {
+                    // Restaurar el índice de skin del heredero elegido al morir
+                    _currentKnightSkinIndex = gm.CurrentRun.KnightSkinIndex;
                     SetClass(gm.CurrentRun.SelectedClass);
+                }
             }
             catch { }
         }
@@ -120,7 +121,6 @@ namespace DungeonLegacy.Player
 
             HandleFlip();
 
-            // Reducir timer de ataque cada frame
             _attackTimer -= Time.deltaTime;
 
             // Dash con Shift izquierdo
@@ -188,7 +188,6 @@ namespace DungeonLegacy.Player
 
             if (_currentState == _attack)
             {
-                // Comprueba IsFinished según el tipo de ataque
                 bool finished = _attack is PlayerAttackState pa ? pa.IsFinished
                               : _attack is MageAttackState ma ? ma.IsFinished
                               : true;
@@ -255,7 +254,6 @@ namespace DungeonLegacy.Player
         private void ChangeState(IPlayerState newState)
         {
             if (newState == _currentState) return;
-
             _currentState?.Exit(_ctx);
             _currentState = newState;
             _currentState.Enter(_ctx);
@@ -276,15 +274,10 @@ namespace DungeonLegacy.Player
         /// Resetea el jugador para la nueva generación — llamado por GenerationManager tras el delay
         public void ResetForNewGeneration()
         {
-            // Resetear timer de ataque
             _attackTimer = 0f;
-
-            // Resetear parámetros del animator
             _ctx.Animator.SetBool("Dead", false);
             _ctx.Animator.SetBool("IsGrounded", true);
             _ctx.Animator.SetFloat("Speed", 0f);
-
-            // Volver al estado inicial
             ChangeState(_idle);
         }
 
@@ -295,17 +288,24 @@ namespace DungeonLegacy.Player
             _attack = playerClass == PlayerClassType.Knight
                 ? (IPlayerState)new PlayerAttackState()
                 : (IPlayerState)new MageAttackState();
-
-            // Cambiar Animator Controller según clase sin randomizar skin
             ApplyAnimator(playerClass);
         }
 
         /// Aplica la clase con un skin aleatorio — usado solo al iniciar nueva generación
         public void SetClassWithNewSkin(PlayerClassType playerClass)
         {
-            // Elegir skin aleatoria para el nuevo heredero Knight
             if (playerClass == PlayerClassType.Knight && _knightAnimators != null && _knightAnimators.Length > 0)
+            {
                 _currentKnightSkinIndex = Random.Range(0, _knightAnimators.Length);
+
+                // Persistir el índice en RunData para que BaseScene lo restaure correctamente
+                try
+                {
+                    var gm = ServiceLocator.Get<GenerationManager>();
+                    if (gm != null) gm.CurrentRun.KnightSkinIndex = _currentKnightSkinIndex;
+                }
+                catch { }
+            }
 
             SetClass(playerClass);
         }
@@ -324,7 +324,6 @@ namespace DungeonLegacy.Player
                     selected = _knightAnimators[_currentKnightSkinIndex];
             }
 
-            // Solo asignar si el controller es diferente al actual para evitar bucles
             if (selected != null && _ctx.Animator.runtimeAnimatorController != selected)
                 _ctx.Animator.runtimeAnimatorController = selected;
         }
@@ -335,7 +334,6 @@ namespace DungeonLegacy.Player
             _ctx.MoveSpeed = moveSpeed;
             _ctx.AttackDamage = attackDamage;
         }
-
 
         private void OnDrawGizmosSelected()
         {

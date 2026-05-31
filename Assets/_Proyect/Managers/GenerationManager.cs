@@ -11,7 +11,6 @@ using UnityEngine.SceneManagement;
 namespace DungeonLegacy.Managers
 {
     /// Orquesta el flujo completo entre generaciones.
-    /// Se registra en el ServiceLocator para que cualquier sistema pueda accederlo.
     public class GenerationManager : MonoBehaviour
     {
         private static GenerationManager _instance;
@@ -22,6 +21,8 @@ namespace DungeonLegacy.Managers
         private HealthComponent _playerHealth;
         private EnergySystem _playerEnergy;
         private ManaSystem _playerMana;
+
+        private RunData _preCalcNextRun = null;
 
         [Header("UI")]
         [SerializeField] private EpitaphScreen _epitaphScreen;
@@ -38,7 +39,6 @@ namespace DungeonLegacy.Managers
             ServiceLocator.Register<GenerationManager>(this);
         }
 
-        /// Inicializa el manager con las referencias del jugador
         public void Initialize(HealthComponent health, EnergySystem energy, ManaSystem mana)
         {
             if (_playerHealth != null)
@@ -61,7 +61,11 @@ namespace DungeonLegacy.Managers
         {
             AncestorRecord record = CrearRegistroAncestro();
             Legacy.AddAncestor(record);
-            StartCoroutine(ShowEpitaphAfterDelay(record, BuildInheritanceSummary()));
+
+            // Pre-calcular herencia para mostrar valores exactos en el epitafio
+            string summary = PreCalcNextGeneration();
+
+            StartCoroutine(ShowEpitaphAfterDelay(record, summary));
         }
 
         private IEnumerator ShowEpitaphAfterDelay(AncestorRecord record, string summary)
@@ -76,14 +80,13 @@ namespace DungeonLegacy.Managers
 
         // ─── Final 1: Abandono voluntario ────────────────────────────────────
 
-        /// Inicia el flujo de abandono — llamado por ExitDoor tras la confirmación
         public void AbandonarMazmorra(string skinName)
         {
             AncestorRecord record = CrearRegistroAncestro();
             Legacy.AddAncestor(record);
-            string summary = BuildInheritanceSummary();
 
-            // Pantalla de retirada → epitafio → siguiente generación
+            string summary = PreCalcNextGeneration();
+
             if (NarrativeEndingScreen.Instance != null)
             {
                 NarrativeEndingScreen.Instance.ShowRetirement(skinName, () =>
@@ -106,14 +109,27 @@ namespace DungeonLegacy.Managers
 
         // ─── Transición generacional ─────────────────────────────────────────
 
-        /// Prepara el siguiente run — incluye el check del 15% (sucesor se niega)
         private void StartNextGeneration()
         {
             int nextGen = CurrentRun.CurrentGeneration + 1;
-            CurrentRun.ResetRun(nextGen);
-            CurrentRun.SelectedClass = Random.Range(0, 2) == 0
-                ? PlayerClassType.Knight
-                : PlayerClassType.Mage;
+
+            if (_preCalcNextRun != null)
+            {
+                // Usar la herencia ya calculada — mismos valores que se mostraron en el epitafio
+                // ApplyInheritance NO se llama aquí: ya está aplicada en _preCalcNextRun
+                CurrentRun = _preCalcNextRun;
+                CurrentRun.ResetRun(nextGen);
+                _preCalcNextRun = null;
+            }
+            else
+            {
+                // Fallback — recalcular (no debería ocurrir en flujo normal)
+                CurrentRun.ResetRun(nextGen);
+                CurrentRun.SelectedClass = Random.Range(0, 2) == 0
+                    ? PlayerClassType.Knight : PlayerClassType.Mage;
+                CurrentRun.ClassSelected = true;
+                InheritanceResolver.ApplyInheritance(Legacy, CurrentRun);
+            }
 
             // Final 2 — 15% de probabilidad de que el sucesor se niegue
             if (NarrativeEndingScreen.Instance != null && Random.value < 0.15f)
@@ -122,20 +138,56 @@ namespace DungeonLegacy.Managers
                 return;
             }
 
-            // Ciclo normal: heredar stats y volver a BaseScene
-            InheritanceResolver.ApplyInheritance(Legacy, CurrentRun);
             ApplyRunDataToPlayer();
         }
 
-        // ─── Helpers ─────────────────────────────────────────────────────────
+        /// Pre-calcula la herencia del siguiente heredero y devuelve el resumen formateado
+        private string PreCalcNextGeneration()
+        {
+            _preCalcNextRun = new RunData();
+            _preCalcNextRun.SelectedClass = Random.Range(0, 2) == 0
+                ? PlayerClassType.Knight : PlayerClassType.Mage;
 
-        /// Crea un AncestorRecord con los stats del run actual
+            // ClassSelected = true — evita que aparezca el selector de clase al inicio del run
+            _preCalcNextRun.ClassSelected = true;
+
+            InheritanceResolver.ApplyInheritance(Legacy, _preCalcNextRun);
+
+            return BuildInheritanceSummary(_preCalcNextRun);
+        }
+
+        /// Genera el resumen de herencia con valores exactos (base → heredado)
+        private string BuildInheritanceSummary(RunData nextRun)
+        {
+            if (!Legacy.HasAncestors()) return "Primera generación — sin herencia.";
+
+            RunData b = new RunData(); // valores base de un heredero sin herencia
+            var sb = new System.Text.StringBuilder();
+
+            sb.AppendLine(FormatStatHerencia("Vida", b.MaxHealth, nextRun.MaxHealth, "F0"));
+            sb.AppendLine(FormatStatHerencia("Daño", b.AttackDamage, nextRun.AttackDamage, "F0"));
+            sb.AppendLine(FormatStatHerencia("Velocidad", b.MoveSpeed, nextRun.MoveSpeed, "F1"));
+            sb.AppendLine(FormatStatHerencia("Energía", b.MaxEnergy, nextRun.MaxEnergy, "F0"));
+            sb.AppendLine(FormatStatHerencia("Maná", b.MaxMana, nextRun.MaxMana, "F0"));
+
+            return sb.ToString();
+        }
+
+        private static string FormatStatHerencia(string nombre, float baseVal, float nextVal, string fmt)
+        {
+            float delta = nextVal - baseVal;
+            return delta > 0.01f
+                ? $"{nombre}: {baseVal.ToString(fmt)} → {nextVal.ToString(fmt)}  (+{delta.ToString(fmt)})"
+                : $"{nombre}: {baseVal.ToString(fmt)}  (sin herencia)";
+        }
+
         private AncestorRecord CrearRegistroAncestro()
         {
             return new AncestorRecord(
                 generation: CurrentRun.CurrentGeneration,
                 floor: CurrentRun.CurrentFloor,
                 gold: CurrentRun.CurrentGold,
+                enemiesKilled: CurrentRun.EnemiesKilled,
                 maxHealth: CurrentRun.MaxHealth,
                 moveSpeed: CurrentRun.MoveSpeed,
                 jumpForce: CurrentRun.JumpForce,
@@ -143,14 +195,6 @@ namespace DungeonLegacy.Managers
                 maxEnergy: CurrentRun.MaxEnergy,
                 maxMana: CurrentRun.MaxMana
             );
-        }
-
-        private string BuildInheritanceSummary()
-        {
-            if (!Legacy.HasAncestors()) return "Primera generación — sin herencia.";
-            return "Stats heredados de forma aleatoria entre:\n" +
-                   "HP, Velocidad, Salto, Daño, Energía y Maná\n" +
-                   "(entre un 5% y un 20% de los stats del ancestro)";
         }
 
         private void ApplyRunDataToPlayer()
@@ -167,7 +211,6 @@ namespace DungeonLegacy.Managers
         private IEnumerator ResetAfterDelay(PlayerController controller)
         {
             yield return null;
-
             controller.SetClassWithNewSkin(CurrentRun.SelectedClass);
             controller.ResetForNewGeneration();
 
@@ -192,10 +235,9 @@ namespace DungeonLegacy.Managers
             SceneManager.LoadScene(sceneName);
         }
 
-        // ─── API pública ──────────────────────────────────────────────────────
-
         public void AdvanceFloor() => CurrentRun.AdvanceFloor();
         public void AddGold(float amount) => CurrentRun.AddGold(amount);
+        public void AddEnemyKill() => CurrentRun.EnemiesKilled++;
 
         public void ApplyBlessing(BlessingData blessing)
         {
