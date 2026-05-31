@@ -1006,6 +1006,7 @@ GameObject:
   m_Component:
   - component: {fileID: 5756614522331824728}
   - component: {fileID: 3645784264540688202}
+  - component: {fileID: 3099366498652015647}
   m_Layer: 0
   m_Name: Room_01
   m_TagString: Untagged
@@ -1056,6 +1057,22 @@ MonoBehaviour:
   - {fileID: 5459872696076816845}
   _platformSpawnPoints:
   - {fileID: 7465848913259605504}
+--- !u!114 &3099366498652015647
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4145697599566799996}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 948aa26b59a29cc48b852fc1f7d78f8e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MinX: -14.32
+  MaxX: 13.559
+  MinY: -5.76
+  MaxY: 8.22
 --- !u!1 &4894299097956814641
 GameObject:
   m_ObjectHideFlags: 0

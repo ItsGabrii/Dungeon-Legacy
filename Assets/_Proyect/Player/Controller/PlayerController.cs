@@ -40,6 +40,28 @@ namespace DungeonLegacy.Player
         private float _attackTimer = 0f;
         private int _currentKnightSkinIndex = 0;
 
+        /// Nombre legible del skin actual — usado en los textos narrativos de los finales
+        public string SkinName
+        {
+            get
+            {
+                if (_playerClass == PlayerClassType.Mage) return "Mago";
+                if (_knightAnimators != null && _currentKnightSkinIndex < _knightAnimators.Length)
+                {
+                    var controller = _knightAnimators[_currentKnightSkinIndex];
+                    if (controller != null) return FormatSkinName(controller.name);
+                }
+                return "Caballero";
+            }
+        }
+
+        private static string FormatSkinName(string rawName) => rawName switch
+        {
+            "CaballeroHacha" => "Caballero Hacha",
+            "CaballeroTemplario" => "Caballero Templario",
+            _ => rawName
+        };
+
         private void Awake()
         {
             _ctx = new PlayerContext(

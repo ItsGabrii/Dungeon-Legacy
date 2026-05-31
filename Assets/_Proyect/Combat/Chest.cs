@@ -32,6 +32,5 @@ public class Chest : MonoBehaviour, IInteractable
         // Abrir selección de bendiciones
         BlessingSelectionUI.Instance?.Show();
 
-        Debug.Log($"[Chest] Cofre abierto — +{_goldAmount} oro");
     }
 }

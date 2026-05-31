@@ -57,7 +57,6 @@ namespace DungeonLegacy.Combat
             }
             catch { }
 
-            Debug.Log($"[CoinDrop] Recogida — +{_goldValue:F0} oro");
             Destroy(gameObject);
         }
     }

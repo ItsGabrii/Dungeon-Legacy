@@ -71,7 +71,7 @@ namespace DungeonLegacy.Combat
                     target.TakeDamage(_damage, Vector2.zero);
             }
 
-            Debug.Log("[Crystal] Explosión");
+
         }
 
         private void OnDrawGizmosSelected()

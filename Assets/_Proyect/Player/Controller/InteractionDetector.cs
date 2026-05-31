@@ -15,9 +15,6 @@ namespace DungeonLegacy.Player
 
         private void Update()
         {
-
-            
-
             // Obtener referencia al texto via singleton — siempre actualizada
             if (InteractionTextUI.Instance != null && _interactionText == null)
             {
@@ -27,6 +24,14 @@ namespace DungeonLegacy.Player
 
             // Si no hay texto disponible no procesar interacciones visuales
             if (_interactionText == null) return;
+
+            // No mostrar texto de interacción si el vendedor o el cofre están abiertos
+            if (BlessingSelectionUI.Instance != null &&
+               (BlessingSelectionUI.Instance.IsVendorOpen || BlessingSelectionUI.Instance.IsPanelOpen))
+            {
+                _interactionText.text = "";
+                return;
+            }
 
             Collider2D hit = Physics2D.OverlapCircle(
                 transform.position, _interactionRadius, _interactableLayer);

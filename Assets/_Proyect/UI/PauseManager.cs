@@ -30,7 +30,6 @@ namespace DungeonLegacy.UI
             }
             _instance = this;
             DontDestroyOnLoad(gameObject);
-
             _pausePanel.SetActive(false);
         }
 
@@ -39,7 +38,6 @@ namespace DungeonLegacy.UI
             // Conectar botones
             _botonReanudar.onClick.AddListener(Reanudar);
             _botonMenuPrincipal.onClick.AddListener(IrAlMenuPrincipal);
-
         }
 
         private void Update()
@@ -50,6 +48,13 @@ namespace DungeonLegacy.UI
 
         private void TogglePausa()
         {
+            // Si el vendedor está abierto, ESC cierra la tienda en vez de pausar
+            if (BlessingSelectionUI.Instance != null && BlessingSelectionUI.Instance.IsVendorOpen)
+            {
+                BlessingSelectionUI.Instance.CerrarVendedor();
+                return;
+            }
+
             _pausado = !_pausado;
             _pausePanel.SetActive(_pausado);
             Time.timeScale = _pausado ? 0f : 1f;

@@ -26,7 +26,6 @@ namespace DungeonLegacy.Combat
             _usado = true;
             GetComponent<Collider2D>().enabled = false;
 
-            Debug.Log($"[HealingPillar] Curado {cantidad:F0} HP");
         }
     }
 }

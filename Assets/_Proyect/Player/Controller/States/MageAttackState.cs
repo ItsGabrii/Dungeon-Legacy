@@ -50,7 +50,6 @@ namespace DungeonLegacy.Player.States
             GameObject prefab = Resources.Load<GameObject>(prefabName);
             if (prefab == null)
             {
-                Debug.LogWarning($"[MageAttackState] No se encontró {prefabName}");
                 return;
             }
 
@@ -80,7 +79,7 @@ namespace DungeonLegacy.Player.States
 
             if (hit == null)
             {
-                Debug.Log("[MageAttackState] No hay enemigo en rango para el cristal");
+               
                 return;
             }
 

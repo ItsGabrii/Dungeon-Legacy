@@ -1,4 +1,4 @@
-using DungeonLegacy.Generation;
+﻿using DungeonLegacy.Generation;
 using DungeonLegacy.Persistence;
 using DungeonLegacy.Player;
 using DungeonLegacy.Player.Stats;
@@ -14,16 +14,11 @@ namespace DungeonLegacy.Managers
     /// Se registra en el ServiceLocator para que cualquier sistema pueda accederlo.
     public class GenerationManager : MonoBehaviour
     {
-        // Singleton � garantiza una sola instancia persistente entre escenas
         private static GenerationManager _instance;
 
-        // Datos persistentes entre runs � sobreviven a la muerte
         public LegacyData Legacy { get; private set; } = new LegacyData();
-
-        // Datos del run actual � se resetean al morir
         public RunData CurrentRun { get; private set; } = new RunData();
 
-        // Referencias a componentes del jugador
         private HealthComponent _playerHealth;
         private EnergySystem _playerEnergy;
         private ManaSystem _playerMana;
@@ -33,7 +28,6 @@ namespace DungeonLegacy.Managers
 
         private void Awake()
         {
-            // Prevenir duplicados al cambiar de escena
             if (_instance != null && _instance != this)
             {
                 Destroy(gameObject);
@@ -41,8 +35,6 @@ namespace DungeonLegacy.Managers
             }
             _instance = this;
             DontDestroyOnLoad(gameObject);
-
-            // Registrar en ServiceLocator para acceso global
             ServiceLocator.Register<GenerationManager>(this);
         }
 
@@ -58,22 +50,89 @@ namespace DungeonLegacy.Managers
 
             _playerHealth.OnDeath += HandlePlayerDeath;
 
-            // Aplicar stats del run actual al jugador reci�n inicializado
             _playerHealth.SetMaxHealth(CurrentRun.MaxHealth);
             _playerEnergy.SetMaxEnergy(CurrentRun.MaxEnergy);
             _playerMana.SetMaxMana(CurrentRun.MaxMana);
-
-            Debug.Log($"[GenerationManager] Inicializado � {CurrentRun}");
         }
 
-        /// Se llama autom�ticamente cuando el jugador muere
+        // ─── Muerte ──────────────────────────────────────────────────────────
+
         private void HandlePlayerDeath()
         {
-            Debug.Log("[GenerationManager] Jugador muerto � registrando ancestro...");
+            AncestorRecord record = CrearRegistroAncestro();
+            Legacy.AddAncestor(record);
+            StartCoroutine(ShowEpitaphAfterDelay(record, BuildInheritanceSummary()));
+        }
 
-            // Crear registro del ancestro con los stats del run actual
-            // incluyendo energ�a y man� para que puedan heredarse
-            AncestorRecord record = new AncestorRecord(
+        private IEnumerator ShowEpitaphAfterDelay(AncestorRecord record, string summary)
+        {
+            yield return new WaitForSecondsRealtime(1.5f);
+
+            if (_epitaphScreen != null)
+                _epitaphScreen.Show(record, summary, StartNextGeneration);
+            else
+                StartNextGeneration();
+        }
+
+        // ─── Final 1: Abandono voluntario ────────────────────────────────────
+
+        /// Inicia el flujo de abandono — llamado por ExitDoor tras la confirmación
+        public void AbandonarMazmorra(string skinName)
+        {
+            AncestorRecord record = CrearRegistroAncestro();
+            Legacy.AddAncestor(record);
+            string summary = BuildInheritanceSummary();
+
+            // Pantalla de retirada → epitafio → siguiente generación
+            if (NarrativeEndingScreen.Instance != null)
+            {
+                NarrativeEndingScreen.Instance.ShowRetirement(skinName, () =>
+                {
+                    if (_epitaphScreen != null)
+                        _epitaphScreen.Show(record, summary, StartNextGeneration);
+                    else
+                        StartNextGeneration();
+                });
+            }
+            else if (_epitaphScreen != null)
+            {
+                _epitaphScreen.Show(record, summary, StartNextGeneration);
+            }
+            else
+            {
+                StartNextGeneration();
+            }
+        }
+
+        // ─── Transición generacional ─────────────────────────────────────────
+
+        /// Prepara el siguiente run — incluye el check del 15% (sucesor se niega)
+        private void StartNextGeneration()
+        {
+            int nextGen = CurrentRun.CurrentGeneration + 1;
+            CurrentRun.ResetRun(nextGen);
+            CurrentRun.SelectedClass = Random.Range(0, 2) == 0
+                ? PlayerClassType.Knight
+                : PlayerClassType.Mage;
+
+            // Final 2 — 15% de probabilidad de que el sucesor se niegue
+            if (NarrativeEndingScreen.Instance != null && Random.value < 0.15f)
+            {
+                NarrativeEndingScreen.Instance.ShowHeirRefuses(CurrentRun.SelectedClass);
+                return;
+            }
+
+            // Ciclo normal: heredar stats y volver a BaseScene
+            InheritanceResolver.ApplyInheritance(Legacy, CurrentRun);
+            ApplyRunDataToPlayer();
+        }
+
+        // ─── Helpers ─────────────────────────────────────────────────────────
+
+        /// Crea un AncestorRecord con los stats del run actual
+        private AncestorRecord CrearRegistroAncestro()
+        {
+            return new AncestorRecord(
                 generation: CurrentRun.CurrentGeneration,
                 floor: CurrentRun.CurrentFloor,
                 gold: CurrentRun.CurrentGold,
@@ -84,97 +143,34 @@ namespace DungeonLegacy.Managers
                 maxEnergy: CurrentRun.MaxEnergy,
                 maxMana: CurrentRun.MaxMana
             );
-
-            // Guardar en el legado familiar
-            Legacy.AddAncestor(record);
-            Debug.Log($"[GenerationManager] Ancestro registrado � {record}");
-            Debug.Log($"[GenerationManager] Legado familiar � {Legacy}");
-
-            // Calcular resumen de herencia para mostrar en la pantalla de epitafio
-            string inheritanceSummary = BuildInheritanceSummary();
-
-            // Esperar a que termine la animaci�n de muerte antes de mostrar el epitafio
-            StartCoroutine(ShowEpitaphAfterDelay(record, inheritanceSummary));
         }
 
-        /// Espera la duraci�n de la animaci�n de muerte antes de mostrar la pantalla
-        private IEnumerator ShowEpitaphAfterDelay(AncestorRecord record, string summary)
-        {
-            // WaitForSecondsRealtime ignora el timeScale � funciona aunque el juego est� pausado
-            yield return new WaitForSecondsRealtime(1.5f);
-
-            // Mostrar pantalla de epitafio � la siguiente generaci�n arranca al pulsar Continuar
-            // Si no hay pantalla asignada, arranca directamente (�til para testing)
-            if (_epitaphScreen != null)
-                _epitaphScreen.Show(record, summary, StartNextGeneration);
-            else
-                StartNextGeneration();
-        }
-
-        /// Genera un resumen legible de los stats que puede heredar el siguiente heredero
         private string BuildInheritanceSummary()
         {
-            if (!Legacy.HasAncestors()) return "Primera generaci�n � sin herencia.";
-
+            if (!Legacy.HasAncestors()) return "Primera generación — sin herencia.";
             return "Stats heredados de forma aleatoria entre:\n" +
-                   "HP, Velocidad, Salto, Da�o, Energ�a y Man�\n" +
+                   "HP, Velocidad, Salto, Daño, Energía y Maná\n" +
                    "(entre un 5% y un 20% de los stats del ancestro)";
         }
 
-        /// Prepara el siguiente run aplicando la herencia
-        private void StartNextGeneration()
-        {
-            int nextGen = CurrentRun.CurrentGeneration + 1;
-
-            // Resetear el run manteniendo la generaci�n
-            CurrentRun.ResetRun(nextGen);
-            CurrentRun.SelectedClass = Random.Range(0, 2) == 0
-                ? PlayerClassType.Knight
-                : PlayerClassType.Mage;
-
-            // Aplicar stats heredados del ancestro (aleatorio)
-            InheritanceResolver.ApplyInheritance(Legacy, CurrentRun);
-
-            // Aplicar los nuevos stats al jugador con delay para que la animaci�n de muerte termine
-            ApplyRunDataToPlayer();
-
-            Debug.Log($"[GenerationManager] Generaci�n {nextGen} iniciada � {CurrentRun}");
-            Debug.Log($"[GenerationManager] Clase heredero: {CurrentRun.SelectedClass}");
-        }
-
-        /// Aplica los stats del RunData a los componentes del jugador
         private void ApplyRunDataToPlayer()
         {
-            if (_playerHealth != null)
-                _playerHealth.SetMaxHealth(CurrentRun.MaxHealth);
+            if (_playerHealth != null) _playerHealth.SetMaxHealth(CurrentRun.MaxHealth);
+            if (_playerEnergy != null) _playerEnergy.SetMaxEnergy(CurrentRun.MaxEnergy);
+            if (_playerMana != null) _playerMana.SetMaxMana(CurrentRun.MaxMana);
 
-            // Aplicar recursos heredados al sistema correspondiente
-            if (_playerEnergy != null)
-                _playerEnergy.SetMaxEnergy(CurrentRun.MaxEnergy);
-
-            if (_playerMana != null)
-                _playerMana.SetMaxMana(CurrentRun.MaxMana);
-
-            // Resetear la FSM y cambiar clase tras delay para que la animaci�n de muerte se vea completa
-            PlayerController playerController = _playerHealth.GetComponent<PlayerController>();
+            var playerController = _playerHealth?.GetComponent<PlayerController>();
             if (playerController != null)
                 StartCoroutine(ResetAfterDelay(playerController));
-
-            Debug.Log("[GenerationManager] Stats aplicados al jugador.");
         }
 
-        /// Espera a que la animaci�n de muerte termine, resetea al heredero y vuelve a BaseScene
         private IEnumerator ResetAfterDelay(PlayerController controller)
         {
             yield return null;
 
-            // Aplicar clase aleatoria al heredero con nuevo skin
             controller.SetClassWithNewSkin(CurrentRun.SelectedClass);
-
-            // Resetear la FSM del jugador
             controller.ResetForNewGeneration();
 
-            // Resetear contador de salas para la nueva run
             try
             {
                 var rm = ServiceLocator.Get<RoomManager>();
@@ -182,11 +178,9 @@ namespace DungeonLegacy.Managers
             }
             catch { }
 
-            // Volver a BaseScene para la nueva generaci�n
             CargarEscena("BaseScene");
         }
 
-        /// Carga una escena usando SceneTransitionManager si est� disponible, o directamente
         private void CargarEscena(string sceneName)
         {
             try
@@ -195,24 +189,14 @@ namespace DungeonLegacy.Managers
                 if (stm != null) { stm.LoadScene(sceneName); return; }
             }
             catch { }
-
             SceneManager.LoadScene(sceneName);
         }
 
-        /// Avanza de planta � llamado al completar una planta
-        public void AdvanceFloor()
-        {
-            CurrentRun.AdvanceFloor();
-            Debug.Log($"[GenerationManager] Planta {CurrentRun.CurrentFloor}");
-        }
+        // ─── API pública ──────────────────────────────────────────────────────
 
-        /// A�ade oro al run actual
-        public void AddGold(float amount)
-        {
-            CurrentRun.AddGold(amount);
-        }
+        public void AdvanceFloor() => CurrentRun.AdvanceFloor();
+        public void AddGold(float amount) => CurrentRun.AddGold(amount);
 
-        /// Aplica una bendici�n al run actual y al jugador inmediatamente
         public void ApplyBlessing(BlessingData blessing)
         {
             float multiplier = 1f + blessing.BonusPercent / 100f;
@@ -223,19 +207,16 @@ namespace DungeonLegacy.Managers
                     CurrentRun.MaxHealth *= multiplier;
                     _playerHealth?.SetMaxHealth(CurrentRun.MaxHealth);
                     break;
-
                 case BlessingType.MoveSpeed:
                     CurrentRun.MoveSpeed *= multiplier;
                     _playerHealth?.GetComponent<PlayerController>()
                                   .ApplyStats(CurrentRun.MoveSpeed, CurrentRun.AttackDamage);
                     break;
-
                 case BlessingType.AttackDamage:
                     CurrentRun.AttackDamage *= multiplier;
                     _playerHealth?.GetComponent<PlayerController>()
                                   .ApplyStats(CurrentRun.MoveSpeed, CurrentRun.AttackDamage);
                     break;
-
                 case BlessingType.MaxResource:
                     CurrentRun.MaxEnergy *= multiplier;
                     CurrentRun.MaxMana *= multiplier;
@@ -243,8 +224,6 @@ namespace DungeonLegacy.Managers
                     _playerMana?.SetMaxMana(CurrentRun.MaxMana);
                     break;
             }
-
-            Debug.Log($"[GenerationManager] Bendici�n aplicada: {blessing.DisplayName} +{blessing.BonusPercent:F0}%");
         }
 
         private void OnDestroy()

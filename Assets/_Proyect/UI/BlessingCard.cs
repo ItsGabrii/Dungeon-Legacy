@@ -1,11 +1,11 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using DungeonLegacy.Progression;
 
 namespace DungeonLegacy.UI
 {
-    /// Carta individual de bendición en la pantalla de selección.
+    /// Carta individual de bendiciÃ³n en la pantalla de selecciÃ³n.
     public class BlessingCard : MonoBehaviour
     {
         [Header("Textos")]
@@ -22,26 +22,127 @@ namespace DungeonLegacy.UI
         [SerializeField] private Image _bordeIzquierdo;
         [SerializeField] private Image _bordeDerecho;
 
+        [Header("Vendedor")]
+        [SerializeField] private TextMeshProUGUI _precioText;
+        [SerializeField] private Image _iconoMoneda;
+        [SerializeField] private Image _vendidoOverlay;
+
         // Colores por tier
         private static readonly Color _bronzeColor = new Color(0.80f, 0.50f, 0.20f);
         private static readonly Color _silverColor = new Color(0.75f, 0.75f, 0.75f);
         private static readonly Color _goldColor = new Color(1.00f, 0.84f, 0.00f);
 
         private BlessingData _blessing;
-        private System.Action<BlessingData> _onSelected;
+        private System.Action<BlessingData, System.Action, System.Action> _onSelected;
+        private bool _comprado = false;
+        private int _precio = 0;
 
-        /// Inicializa la carta con los datos de la bendición
-        public void Initialize(BlessingData blessing, System.Action<BlessingData> onSelected)
+        /// Modo cofre
+        public void Initialize(BlessingData blessing, System.Action<BlessingData, System.Action> onSelected)
         {
             _blessing = blessing;
-            _onSelected = onSelected;
+            _comprado = false;
 
+            _onSelected = (b, marcar, _) => onSelected?.Invoke(b, marcar);
+
+            AplicarTextos(blessing);
+            AplicarColorTier(blessing.Tier);
+
+            if (_precioText != null) _precioText.gameObject.SetActive(false);
+            if (_iconoMoneda != null) _iconoMoneda.gameObject.SetActive(false);
+            if (_vendidoOverlay != null) _vendidoOverlay.gameObject.SetActive(false);
+
+            var btn = GetComponent<Button>();
+            btn.onClick.RemoveAllListeners();
+            btn.interactable = true;
+            btn.onClick.AddListener(OnCardClicked);
+        }
+
+        /// Modo vendedor
+        public void InitializeVendor(BlessingData blessing, int precio, bool puedeComprar,
+            System.Action<BlessingData, System.Action, System.Action> onBought)
+        {
+            _blessing = blessing;
+            _onSelected = onBought;
+            _precio = precio;
+
+            AplicarTextos(blessing);
+            AplicarColorTier(blessing.Tier);
+
+            if (_precioText != null) _precioText.gameObject.SetActive(true);
+
+            var btn = GetComponent<Button>();
+            btn.onClick.RemoveAllListeners();
+
+            if (_comprado)
+            {
+                SetTextoPrecio("VENDIDO", mostrarIcono: false);
+                if (_vendidoOverlay != null) _vendidoOverlay.gameObject.SetActive(true);
+                btn.interactable = false;
+            }
+            else if (!puedeComprar)
+            {
+                SetTextoPrecio("SIN ORO", mostrarIcono: false);
+                if (_vendidoOverlay != null) _vendidoOverlay.gameObject.SetActive(true);
+                btn.interactable = false;
+            }
+            else
+            {
+                SetTextoPrecio($"{precio}", mostrarIcono: true);
+                if (_vendidoOverlay != null) _vendidoOverlay.gameObject.SetActive(false);
+                btn.interactable = true;
+                btn.onClick.AddListener(OnCardClicked);
+            }
+        }
+
+        private void OnCardClicked()
+        {
+            if (_comprado) return;
+            _onSelected?.Invoke(_blessing, MarcarVendido, MostrarOroInsuficiente);
+        }
+
+        private void MarcarVendido()
+        {
+            _comprado = true;
+            SetTextoPrecio("VENDIDO", mostrarIcono: false);
+            if (_vendidoOverlay != null) _vendidoOverlay.gameObject.SetActive(true);
+            GetComponent<Button>().interactable = false;
+        }
+
+        private void MostrarOroInsuficiente()
+        {
+            SetTextoPrecio("SIN ORO", mostrarIcono: false);
+            if (_vendidoOverlay != null) _vendidoOverlay.gameObject.SetActive(true);
+            StartCoroutine(RestaurarPrecio());
+        }
+
+        private System.Collections.IEnumerator RestaurarPrecio()
+        {
+            yield return new WaitForSecondsRealtime(1.5f);
+            if (!_comprado)
+            {
+                SetTextoPrecio($"{_precio}", mostrarIcono: true);
+                if (_vendidoOverlay != null) _vendidoOverlay.gameObject.SetActive(false);
+            }
+        }
+
+        /// Cambia el texto del precio. El icono de moneda solo aparece con el precio numÃ©rico
+        private void SetTextoPrecio(string texto, bool mostrarIcono)
+        {
+            if (_precioText != null) _precioText.text = texto;
+            if (_iconoMoneda != null) _iconoMoneda.gameObject.SetActive(mostrarIcono);
+        }
+
+        private void AplicarTextos(BlessingData blessing)
+        {
             _tierText.text = blessing.TierName.ToUpper();
             _nameText.text = blessing.DisplayName;
             _descriptionText.text = blessing.Description;
+        }
 
-            // Color según tier aplicado al texto y a los 4 bordes
-            Color tierColor = blessing.Tier switch
+        private void AplicarColorTier(BlessingTier tier)
+        {
+            Color tierColor = tier switch
             {
                 BlessingTier.Bronze => _bronzeColor,
                 BlessingTier.Silver => _silverColor,
@@ -51,19 +152,10 @@ namespace DungeonLegacy.UI
 
             _tierText.color = tierColor;
 
-            // Aplicar color del tier a los 4 bordes
             if (_bordeSuperior != null) _bordeSuperior.color = tierColor;
             if (_bordeInferior != null) _bordeInferior.color = tierColor;
             if (_bordeIzquierdo != null) _bordeIzquierdo.color = tierColor;
             if (_bordeDerecho != null) _bordeDerecho.color = tierColor;
-
-            // Conectar botón
-            GetComponent<Button>().onClick.AddListener(OnCardClicked);
-        }
-
-        private void OnCardClicked()
-        {
-            _onSelected?.Invoke(_blessing);
         }
     }
 }

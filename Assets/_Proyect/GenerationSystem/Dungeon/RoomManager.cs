@@ -56,7 +56,7 @@ namespace DungeonLegacy.Generation
         public void OnRoomCompleted()
         {
             _roomsCompleted++;
-            Debug.Log($"[RoomManager] Sala completada {_roomsCompleted}/{_roomsPerRun}");
+           
 
             if (_roomsCompleted >= _roomsPerRun)
             {
@@ -77,7 +77,7 @@ namespace DungeonLegacy.Generation
         {
             _roomsCompleted = 0;
             _lastRoomIndex = -1;
-            Debug.Log("[RoomManager] Salas reseteadas.");
+           
         }
 
         private void CargarEscena(string sceneName)

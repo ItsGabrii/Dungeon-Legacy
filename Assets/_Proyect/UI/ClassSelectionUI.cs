@@ -45,7 +45,6 @@ namespace DungeonLegacy.UI
             }
 
             _panel.SetActive(false);
-            Debug.Log($"[ClassSelection] Clase seleccionada: {playerClass}");
         }
     }
 }

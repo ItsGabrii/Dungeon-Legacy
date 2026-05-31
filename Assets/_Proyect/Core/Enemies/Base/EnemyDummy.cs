@@ -20,7 +20,6 @@ public class EnemyDummy : MonoBehaviour, IDamageable
     {
         if (IsDead) return;
         _currentHealth -= amount;
-        Debug.Log($"[EnemyDummy] Vida restante: {_currentHealth}");
 
         if (knockback != Vector2.zero)
         {
@@ -32,7 +31,7 @@ public class EnemyDummy : MonoBehaviour, IDamageable
         if (_currentHealth <= 0)
         {
             OnDeath?.Invoke();
-            Debug.Log("[EnemyDummy] Muerto.");
+
             gameObject.SetActive(false);
         }
     }

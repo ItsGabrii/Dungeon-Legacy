@@ -28,9 +28,17 @@ namespace DungeonLegacy.Generation
                         if (jugador != null)
                             jugador.transform.position = spawnPoint.position;
                     }
+
+                    // Aplicar bounds de cámara de la sala
+                    RoomCameraBounds bounds = room.GetComponentInChildren<RoomCameraBounds>();
+                    if (bounds != null)
+                    {
+                        Camera.main.GetComponent<CameraFollow>()
+                            ?.SetBounds(bounds.MinX, bounds.MaxX, bounds.MinY, bounds.MaxY);
+                    }
                 }
             }
-            catch { Debug.LogWarning("[RoomLoader] RoomManager no disponible."); }
+            catch {  }
         }
     }
 }

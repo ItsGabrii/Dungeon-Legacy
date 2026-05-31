@@ -386,9 +386,29 @@ PrefabInstance:
       value: Main Camera
       objectReference: {fileID: 0}
     - target: {fileID: 4492963862602328913, guid: ee80eb316cd401444b2b78a0fbefa89d, type: 3}
+      propertyPath: _maxX
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4492963862602328913, guid: ee80eb316cd401444b2b78a0fbefa89d, type: 3}
+      propertyPath: _maxY
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4492963862602328913, guid: ee80eb316cd401444b2b78a0fbefa89d, type: 3}
+      propertyPath: _minX
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4492963862602328913, guid: ee80eb316cd401444b2b78a0fbefa89d, type: 3}
+      propertyPath: _minY
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4492963862602328913, guid: ee80eb316cd401444b2b78a0fbefa89d, type: 3}
       propertyPath: _target
       value: 
       objectReference: {fileID: 416447781}
+    - target: {fileID: 4492963862602328913, guid: ee80eb316cd401444b2b78a0fbefa89d, type: 3}
+      propertyPath: _useBounds
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7054814355914991210, guid: ee80eb316cd401444b2b78a0fbefa89d, type: 3}
       propertyPath: m_LocalPosition.x
       value: 1.27

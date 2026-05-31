@@ -20,7 +20,7 @@ namespace DungeonLegacy.Generation
 
                 SpawnEnemies(gm.CurrentRun.CurrentGeneration);
             }
-            catch { Debug.LogWarning("[RoomSpawner] GenerationManager no disponible."); }
+            catch {  }
         }
 
         /// Instancia enemigos según la generación actual
@@ -30,7 +30,7 @@ namespace DungeonLegacy.Generation
             int orcCount = Mathf.Min(2 + (generation - 1) / 2, 5);
             int archerCount = Mathf.Min(1 + (generation - 1) / 2, 5);
 
-            Debug.Log($"[RoomSpawner] Gen {generation} — Orcos:{orcCount} Arqueros:{archerCount}");
+   
 
             // Spawnear orcos en puntos de suelo
             GameObject orcPrefab = Resources.Load<GameObject>("Prefabs/EnemyMelee");
@@ -38,8 +38,7 @@ namespace DungeonLegacy.Generation
             {
                 if (orcPrefab != null)
                     Instantiate(orcPrefab, _groundSpawnPoints[i].position, Quaternion.identity);
-                else
-                    Debug.LogWarning("[RoomSpawner] No se encontró prefab EnemyMelee en Resources/Prefabs/");
+                   
             }
 
             // Spawnear arqueros en puntos de plataforma
@@ -48,8 +47,7 @@ namespace DungeonLegacy.Generation
             {
                 if (archerPrefab != null)
                     Instantiate(archerPrefab, _platformSpawnPoints[i].position, Quaternion.identity);
-                else
-                    Debug.LogWarning("[RoomSpawner] No se encontró prefab SkeletonArcher en Resources/Prefabs/");
+                   
             }
         }
     }

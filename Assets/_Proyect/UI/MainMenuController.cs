@@ -31,12 +31,11 @@ namespace DungeonLegacy.UI
         private void AbrirOpciones()
         {
             // Placeholder — opciones se implementará más adelante
-            Debug.Log("[MainMenu] Opciones — pendiente de implementar");
+
         }
 
         private void SalirJuego()
         {
-            Debug.Log("[MainMenu] Saliendo del juego...");
             Application.Quit();
         }
     }

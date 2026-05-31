@@ -1,6 +1,5 @@
 using DungeonLegacy.Generation;
 using DungeonLegacy.Managers;
-using UnityEditor.EditorTools;
 using UnityEngine;
 
 /// Puerta interactuable — transiciona a la siguiente sala o escena.

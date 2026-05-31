@@ -17,7 +17,6 @@ namespace DungeonLegacy.Enemies.Types
             GameObject prefab = Resources.Load<GameObject>("Prefabs/EnemyArrow");
             if (prefab == null)
             {
-                Debug.LogWarning("[GoblinArcher] No se encontró el prefab EnemyArrow en Resources/Prefabs/");
                 return;
             }
 

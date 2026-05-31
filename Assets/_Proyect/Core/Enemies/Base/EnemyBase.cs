@@ -226,7 +226,6 @@ namespace DungeonLegacy.Enemies
         {
             GameObject coinPrefab = Resources.Load<GameObject>("Prefabs/Coin");
 
-            Debug.Log($"[EnemyBase] SpawnCoins — prefab: {(coinPrefab != null ? "encontrado" : "NULL")}");
 
             if (coinPrefab == null) return;
 
