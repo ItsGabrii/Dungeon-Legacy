@@ -177,6 +177,7 @@ MonoBehaviour:
   - {fileID: 9100000, guid: 084a46ccbb03f1f498ba747c0ea2b69c, type: 2}
   - {fileID: 9100000, guid: 01de5707f45bf184b9214295f76d50fa, type: 2}
   _mageAnimator: {fileID: 9100000, guid: d0064c596aee7e5408b47ab6f1cc749c, type: 2}
+  _dashGroundCooldown: 0.5
 --- !u!114 &4099951436279892637
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -228,7 +229,7 @@ BoxCollider2D:
   m_Enabled: 1
   serializedVersion: 3
   m_Density: 1
-  m_Material: {fileID: 0}
+  m_Material: {fileID: 6200000, guid: 98d0954918dd2334ab2a88a03489623f, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -280,7 +281,6 @@ MonoBehaviour:
   _interactableLayer:
     serializedVersion: 2
     m_Bits: 1024
-  _interactionText: {fileID: 0}
 --- !u!1 &4674715629159079039
 GameObject:
   m_ObjectHideFlags: 0

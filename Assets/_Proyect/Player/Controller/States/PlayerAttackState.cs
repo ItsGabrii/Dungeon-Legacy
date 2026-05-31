@@ -9,24 +9,29 @@ namespace DungeonLegacy.Player.States
         private float _attackRange = 0.4f;
         private float _energyCost = 10f;
         private float _playerPushback = 4f;
-
         private float _timer;
         private bool _damageApplied;
         private int _currentAttack = 1;
 
         public bool IsFinished => _timer >= _attackDuration;
 
-        public void SetAttackIndex(int index)
-        {
-            _currentAttack = index;
-        }
+        public void SetAttackIndex(int index) => _currentAttack = index;
+        public void SetEnergyCost(float cost) => _energyCost = cost;
 
         public void Enter(PlayerContext ctx)
         {
             _timer = 0f;
             _damageApplied = false;
 
-            // Disparar el trigger del ataque correspondiente
+            // Verificar energía ANTES de la animación — si no hay suficiente, cancelar el estado
+            EnergySystem energy = ctx.Transform.GetComponent<EnergySystem>();
+            if (energy != null && !energy.TryConsume(_energyCost))
+            {
+                // Sin energía — forzar fin inmediato sin animación ni daño
+                _timer = _attackDuration;
+                return;
+            }
+
             string trigger = _currentAttack switch
             {
                 1 => "Attack1",
@@ -35,15 +40,12 @@ namespace DungeonLegacy.Player.States
                 _ => "Attack1"
             };
             ctx.Animator.SetTrigger(trigger);
-
-            EnergySystem energy = ctx.Transform.GetComponent<EnergySystem>();
-            if (energy != null)
-                energy.TryConsume(_energyCost);
         }
 
         public void Update(PlayerContext ctx)
         {
             _timer += Time.deltaTime;
+
             if (!_damageApplied && _timer >= _attackDuration * 0.5f)
             {
                 ApplyDamage(ctx);
@@ -56,7 +58,6 @@ namespace DungeonLegacy.Player.States
 
         private void ApplyDamage(PlayerContext ctx)
         {
-            // Ataque 3 tiene más rango y daño — lee el daño base del contexto
             float range = _currentAttack == 3 ? _attackRange * 1.5f : _attackRange;
             float damage = _currentAttack == 3 ? ctx.AttackDamage * 1.5f : ctx.AttackDamage;
 
@@ -69,7 +70,6 @@ namespace DungeonLegacy.Player.States
                 if (damageable == null) continue;
 
                 damageable.TakeDamage(damage, Vector2.zero);
-
                 Vector2 pushbackDir = ctx.IsFacingRight ? Vector2.left : Vector2.right;
                 ctx.Rb.AddForce(pushbackDir * _playerPushback, ForceMode2D.Impulse);
             }

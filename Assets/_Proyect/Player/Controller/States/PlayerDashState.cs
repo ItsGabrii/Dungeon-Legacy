@@ -1,5 +1,4 @@
 using UnityEngine;
-
 namespace DungeonLegacy.Player.States
 {
     public class PlayerDashState : IPlayerState
@@ -20,7 +19,6 @@ namespace DungeonLegacy.Player.States
             // Cancelar velocidad vertical para que el dash sea horizontal puro
             ctx.Rb.linearVelocity = Vector2.zero;
             ctx.Rb.gravityScale = 0f;
-
             ctx.Animator.SetTrigger("Dash");
             CanDash = false;
         }
@@ -28,10 +26,8 @@ namespace DungeonLegacy.Player.States
         public void Update(PlayerContext ctx)
         {
             _timer += Time.deltaTime;
-
-            // Recargar dash al tocar suelo
-            if (!CanDash && ctx.IsGrounded)
-                CanDash = true;
+            // El reset de CanDash lo gestiona PlayerController con cooldown
+            // para evitar spam de dash en suelo
         }
 
         public void FixedUpdate(PlayerContext ctx)

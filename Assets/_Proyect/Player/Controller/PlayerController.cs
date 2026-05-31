@@ -40,6 +40,16 @@ namespace DungeonLegacy.Player
         private float _attackTimer = 0f;
         private int _currentKnightSkinIndex = 0;
 
+        // Cooldown de dash en suelo — evita spam de dash al aterrizar
+        [Header("Dash")]
+        [SerializeField] private float _dashGroundCooldown = 0.5f;
+        private float _dashGroundTimer = 0f;
+
+        // Costes de ataque — ajustables en Inspector para pruebas de balance
+        [Header("Costes de ataque")]
+        [SerializeField] private float _energyCostAttack = 10f;
+        [SerializeField] private float _manaCostAttack = 1f;
+
         /// Nombre legible del skin actual — usado en los textos narrativos de los finales
         public string SkinName
         {
@@ -86,6 +96,7 @@ namespace DungeonLegacy.Player
                 ? (IPlayerState)new PlayerAttackState()
                 : (IPlayerState)new MageAttackState();
 
+            ApplyAttackCost();
             ApplyAnimator(_playerClass);
             ChangeState(_idle);
         }
@@ -98,7 +109,6 @@ namespace DungeonLegacy.Player
                 var gm = ServiceLocator.Get<GenerationManager>();
                 if (gm != null)
                 {
-                    // Restaurar el índice de skin del heredero elegido al morir
                     _currentKnightSkinIndex = gm.CurrentRun.KnightSkinIndex;
                     SetClass(gm.CurrentRun.SelectedClass);
                 }
@@ -122,6 +132,7 @@ namespace DungeonLegacy.Player
             HandleFlip();
 
             _attackTimer -= Time.deltaTime;
+            _dashGroundTimer -= Time.deltaTime;  // descuentar cooldown de dash en suelo
 
             // Dash con Shift izquierdo
             if (Input.GetKeyDown(KeyCode.LeftShift) &&
@@ -130,6 +141,7 @@ namespace DungeonLegacy.Player
                 _currentState != _dash)
             {
                 ChangeState(_dash);
+                _dashGroundTimer = _dashGroundCooldown;  // iniciar cooldown al hacer dash
                 return;
             }
 
@@ -169,7 +181,8 @@ namespace DungeonLegacy.Player
                 return;
             }
 
-            if (!_dash.CanDash && _ctx.IsGrounded && _currentState != _dash)
+            // Recargar dash al tocar suelo — solo cuando el cooldown ha expirado
+            if (!_dash.CanDash && _ctx.IsGrounded && _currentState != _dash && _dashGroundTimer <= 0f)
                 _dash.CanDash = true;
 
             HandleTransitions();
@@ -275,6 +288,7 @@ namespace DungeonLegacy.Player
         public void ResetForNewGeneration()
         {
             _attackTimer = 0f;
+            _dashGroundTimer = 0f;
             _ctx.Animator.SetBool("Dead", false);
             _ctx.Animator.SetBool("IsGrounded", true);
             _ctx.Animator.SetFloat("Speed", 0f);
@@ -288,7 +302,15 @@ namespace DungeonLegacy.Player
             _attack = playerClass == PlayerClassType.Knight
                 ? (IPlayerState)new PlayerAttackState()
                 : (IPlayerState)new MageAttackState();
+            ApplyAttackCost();
             ApplyAnimator(playerClass);
+        }
+
+        /// Aplica los costes de ataque serializados al estado activo
+        private void ApplyAttackCost()
+        {
+            if (_attack is PlayerAttackState pa) pa.SetEnergyCost(_energyCostAttack);
+            else if (_attack is MageAttackState ma) ma.SetManaCost(_manaCostAttack);
         }
 
         /// Aplica la clase con un skin aleatorio — usado solo al iniciar nueva generación
@@ -297,8 +319,6 @@ namespace DungeonLegacy.Player
             if (playerClass == PlayerClassType.Knight && _knightAnimators != null && _knightAnimators.Length > 0)
             {
                 _currentKnightSkinIndex = Random.Range(0, _knightAnimators.Length);
-
-                // Persistir el índice en RunData para que BaseScene lo restaure correctamente
                 try
                 {
                     var gm = ServiceLocator.Get<GenerationManager>();
@@ -306,7 +326,6 @@ namespace DungeonLegacy.Player
                 }
                 catch { }
             }
-
             SetClass(playerClass);
         }
 
@@ -315,14 +334,9 @@ namespace DungeonLegacy.Player
             RuntimeAnimatorController selected = null;
 
             if (playerClass == PlayerClassType.Mage)
-            {
                 selected = _mageAnimator;
-            }
-            else
-            {
-                if (_knightAnimators != null && _knightAnimators.Length > 0)
-                    selected = _knightAnimators[_currentKnightSkinIndex];
-            }
+            else if (_knightAnimators != null && _knightAnimators.Length > 0)
+                selected = _knightAnimators[_currentKnightSkinIndex];
 
             if (selected != null && _ctx.Animator.runtimeAnimatorController != selected)
                 _ctx.Animator.runtimeAnimatorController = selected;

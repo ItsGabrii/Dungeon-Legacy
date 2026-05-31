@@ -14,19 +14,24 @@ namespace DungeonLegacy.Player.States
 
         public bool IsFinished => _timer >= _attackDuration;
 
-        public void SetAttackIndex(int index)
-        {
-            _currentAttack = index;
-        }
+        public void SetAttackIndex(int index) => _currentAttack = index;
+        public void SetManaCost(float cost) => _manaCost = cost;
 
         public void Enter(PlayerContext ctx)
         {
             _timer = 0f;
             _effectTriggered = false;
-            ctx.Animator.SetTrigger("Attack1");
 
+            // Verificar maná ANTES de la animación — si no hay suficiente, cancelar el estado
             ManaSystem mana = ctx.Transform.GetComponent<ManaSystem>();
-            if (mana != null) mana.TryConsume(_manaCost);
+            if (mana != null && !mana.TryConsume(_manaCost))
+            {
+                // Sin maná — forzar fin inmediato sin animación ni proyectil
+                _timer = _attackDuration;
+                return;
+            }
+
+            ctx.Animator.SetTrigger("Attack1");
         }
 
         public void Update(PlayerContext ctx)
@@ -41,21 +46,16 @@ namespace DungeonLegacy.Player.States
         }
 
         public void FixedUpdate(PlayerContext ctx) { }
-
         public void Exit(PlayerContext ctx) { }
 
         private void SpawnProjectile(PlayerContext ctx)
         {
             string prefabName = _currentAttack == 1 ? "Prefabs/Fireball" : "Prefabs/Crystal";
             GameObject prefab = Resources.Load<GameObject>(prefabName);
-            if (prefab == null)
-            {
-                return;
-            }
+            if (prefab == null) return;
 
             if (_currentAttack == 1)
             {
-                // Bola de fuego — proyectil normal hacia adelante
                 GameObject proj = GameObject.Instantiate(prefab, ctx.AttackPoint.position, Quaternion.identity);
                 Projectile projectile = proj.GetComponent<Projectile>();
                 if (projectile != null)
@@ -66,7 +66,6 @@ namespace DungeonLegacy.Player.States
             }
             else
             {
-                // Cristal — spawnea en el enemigo más cercano dentro del rango
                 SpawnCrystal(ctx, prefab);
             }
         }
@@ -77,16 +76,11 @@ namespace DungeonLegacy.Player.States
             Collider2D hit = Physics2D.OverlapCircle(
                 ctx.Transform.position, crystalRange, ctx.EnemyLayer);
 
-            if (hit == null)
-            {
-               
-                return;
-            }
+            if (hit == null) return;
 
             GameObject crystal = GameObject.Instantiate(prefab, hit.transform.position, Quaternion.identity);
             CrystalProjectile cp = crystal.GetComponent<CrystalProjectile>();
-            if (cp != null)
-                cp.Initialize(hit.gameObject, ctx.EnemyLayer);
+            if (cp != null) cp.Initialize(hit.gameObject, ctx.EnemyLayer);
         }
     }
 }

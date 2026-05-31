@@ -141,10 +141,11 @@ MonoBehaviour:
   _patrolRange: 3
   _patrolSpeed: 1.5
   _patrolWaitTime: 1.5
+  _attackAnimDuration: 0.6
   _playerLayer:
     serializedVersion: 2
     m_Bits: 64
-  _knockbackForce: 5
+  _knockbackForce: 2
 --- !u!61 &6605527366370393910
 BoxCollider2D:
   m_ObjectHideFlags: 0
