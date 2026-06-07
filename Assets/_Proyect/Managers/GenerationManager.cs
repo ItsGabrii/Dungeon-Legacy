@@ -24,6 +24,9 @@ namespace DungeonLegacy.Managers
 
         private RunData _preCalcNextRun = null;
 
+        // Techo de velocidad — coincide con el límite del InheritanceResolver
+        private const float MaxMoveSpeed = 12f;
+
         [Header("UI")]
         [SerializeField] private EpitaphScreen _epitaphScreen;
 
@@ -53,6 +56,10 @@ namespace DungeonLegacy.Managers
             _playerHealth.SetMaxHealth(CurrentRun.MaxHealth);
             _playerEnergy.SetMaxEnergy(CurrentRun.MaxEnergy);
             _playerMana.SetMaxMana(CurrentRun.MaxMana);
+
+            // Aplicar velocidad y daño al contexto del jugador
+            health.GetComponent<PlayerController>()
+                  ?.ApplyStats(CurrentRun.MoveSpeed, CurrentRun.AttackDamage);
         }
 
         // ─── Muerte ──────────────────────────────────────────────────────────
@@ -62,9 +69,7 @@ namespace DungeonLegacy.Managers
             AncestorRecord record = CrearRegistroAncestro();
             Legacy.AddAncestor(record);
 
-            // Pre-calcular herencia para mostrar valores exactos en el epitafio
             string summary = PreCalcNextGeneration();
-
             StartCoroutine(ShowEpitaphAfterDelay(record, summary));
         }
 
@@ -84,7 +89,6 @@ namespace DungeonLegacy.Managers
         {
             AncestorRecord record = CrearRegistroAncestro();
             Legacy.AddAncestor(record);
-
             string summary = PreCalcNextGeneration();
 
             if (NarrativeEndingScreen.Instance != null)
@@ -98,13 +102,9 @@ namespace DungeonLegacy.Managers
                 });
             }
             else if (_epitaphScreen != null)
-            {
                 _epitaphScreen.Show(record, summary, StartNextGeneration);
-            }
             else
-            {
                 StartNextGeneration();
-            }
         }
 
         // ─── Transición generacional ─────────────────────────────────────────
@@ -115,15 +115,12 @@ namespace DungeonLegacy.Managers
 
             if (_preCalcNextRun != null)
             {
-                // Usar la herencia ya calculada — mismos valores que se mostraron en el epitafio
-                // ApplyInheritance NO se llama aquí: ya está aplicada en _preCalcNextRun
                 CurrentRun = _preCalcNextRun;
                 CurrentRun.ResetRun(nextGen);
                 _preCalcNextRun = null;
             }
             else
             {
-                // Fallback — recalcular (no debería ocurrir en flujo normal)
                 CurrentRun.ResetRun(nextGen);
                 CurrentRun.SelectedClass = Random.Range(0, 2) == 0
                     ? PlayerClassType.Knight : PlayerClassType.Mage;
@@ -131,7 +128,7 @@ namespace DungeonLegacy.Managers
                 InheritanceResolver.ApplyInheritance(Legacy, CurrentRun);
             }
 
-            // Final 2 — 15% de probabilidad de que el sucesor se niegue
+            // Final 3 — 15% de probabilidad de que el sucesor se niegue
             if (NarrativeEndingScreen.Instance != null && Random.value < 0.15f)
             {
                 NarrativeEndingScreen.Instance.ShowHeirRefuses(CurrentRun.SelectedClass);
@@ -141,27 +138,22 @@ namespace DungeonLegacy.Managers
             ApplyRunDataToPlayer();
         }
 
-        /// Pre-calcula la herencia del siguiente heredero y devuelve el resumen formateado
         private string PreCalcNextGeneration()
         {
             _preCalcNextRun = new RunData();
             _preCalcNextRun.SelectedClass = Random.Range(0, 2) == 0
                 ? PlayerClassType.Knight : PlayerClassType.Mage;
-
-            // ClassSelected = true — evita que aparezca el selector de clase al inicio del run
             _preCalcNextRun.ClassSelected = true;
 
             InheritanceResolver.ApplyInheritance(Legacy, _preCalcNextRun);
-
             return BuildInheritanceSummary(_preCalcNextRun);
         }
 
-        /// Genera el resumen de herencia con valores exactos (base → heredado)
         private string BuildInheritanceSummary(RunData nextRun)
         {
             if (!Legacy.HasAncestors()) return "Primera generación — sin herencia.";
 
-            RunData b = new RunData(); // valores base de un heredero sin herencia
+            RunData b = new RunData();
             var sb = new System.Text.StringBuilder();
 
             sb.AppendLine(FormatStatHerencia("Vida", b.MaxHealth, nextRun.MaxHealth, "F0"));
@@ -213,6 +205,8 @@ namespace DungeonLegacy.Managers
             yield return null;
             controller.SetClassWithNewSkin(CurrentRun.SelectedClass);
             controller.ResetForNewGeneration();
+            // Aplicar velocidad y daño heredados al nuevo personaje
+            controller.ApplyStats(CurrentRun.MoveSpeed, CurrentRun.AttackDamage);
 
             try
             {
@@ -239,6 +233,14 @@ namespace DungeonLegacy.Managers
         public void AddGold(float amount) => CurrentRun.AddGold(amount);
         public void AddEnemyKill() => CurrentRun.EnemiesKilled++;
 
+        /// Resetea completamente el estado del juego — usado al activarse el final narrativo
+        public void ResetGame()
+        {
+            Legacy = new LegacyData();
+            CurrentRun = new RunData();
+            _preCalcNextRun = null;
+        }
+
         public void ApplyBlessing(BlessingData blessing)
         {
             float multiplier = 1f + blessing.BonusPercent / 100f;
@@ -249,16 +251,20 @@ namespace DungeonLegacy.Managers
                     CurrentRun.MaxHealth *= multiplier;
                     _playerHealth?.SetMaxHealth(CurrentRun.MaxHealth);
                     break;
+
                 case BlessingType.MoveSpeed:
-                    CurrentRun.MoveSpeed *= multiplier;
+                    // Techo de MaxMoveSpeed — evita que las bendiciones rompan el movimiento
+                    CurrentRun.MoveSpeed = Mathf.Min(CurrentRun.MoveSpeed * multiplier, MaxMoveSpeed);
                     _playerHealth?.GetComponent<PlayerController>()
-                                  .ApplyStats(CurrentRun.MoveSpeed, CurrentRun.AttackDamage);
+                                  ?.ApplyStats(CurrentRun.MoveSpeed, CurrentRun.AttackDamage);
                     break;
+
                 case BlessingType.AttackDamage:
                     CurrentRun.AttackDamage *= multiplier;
                     _playerHealth?.GetComponent<PlayerController>()
-                                  .ApplyStats(CurrentRun.MoveSpeed, CurrentRun.AttackDamage);
+                                  ?.ApplyStats(CurrentRun.MoveSpeed, CurrentRun.AttackDamage);
                     break;
+
                 case BlessingType.MaxResource:
                     CurrentRun.MaxEnergy *= multiplier;
                     CurrentRun.MaxMana *= multiplier;

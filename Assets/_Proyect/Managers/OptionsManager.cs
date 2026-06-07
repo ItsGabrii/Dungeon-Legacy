@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 namespace DungeonLegacy.Managers
 {
@@ -11,12 +12,12 @@ namespace DungeonLegacy.Managers
         public static OptionsManager Instance => _instance;
 
         // ─── Valores actuales ────────────────────────────────────────────────
-        public float MusicVolume     { get; private set; } = 1f;
-        public float SFXVolume       { get; private set; } = 1f;
-        public bool  Fullscreen      { get; private set; } = true;
-        public int   ResolutionIndex { get; private set; } = 0;
-        public float Brightness      { get; private set; } = 1f;
-        public bool  VSync           { get; private set; } = true;
+        public float MusicVolume { get; private set; } = 1f;
+        public float SFXVolume { get; private set; } = 1f;
+        public bool Fullscreen { get; private set; } = true;
+        public int ResolutionIndex { get; private set; } = 0;
+        public float Brightness { get; private set; } = 1f;
+        public bool VSync { get; private set; } = true;
 
         // Resoluciones disponibles — en orden de menor a mayor
         public static readonly (int w, int h)[] Resoluciones =
@@ -31,12 +32,12 @@ namespace DungeonLegacy.Managers
         private Image _brightnessOverlay;
 
         // ─── Claves PlayerPrefs ──────────────────────────────────────────────
-        private const string K_MUSIC      = "MusicVolume";
-        private const string K_SFX        = "SFXVolume";
+        private const string K_MUSIC = "MusicVolume";
+        private const string K_SFX = "SFXVolume";
         private const string K_FULLSCREEN = "Fullscreen";
         private const string K_RESOLUTION = "Resolution";
         private const string K_BRIGHTNESS = "Brightness";
-        private const string K_VSYNC      = "VSync";
+        private const string K_VSYNC = "VSync";
 
         private void Awake()
         {
@@ -51,6 +52,21 @@ namespace DungeonLegacy.Managers
             CrearOverlayBrillo();
             CargarAjustes();
             AplicarTodos();
+
+            // Re-aplicar ajustes cada vez que carga una escena nueva
+            SceneManager.sceneLoaded += OnSceneLoaded;
+        }
+
+        private void OnDestroy()
+        {
+            SceneManager.sceneLoaded -= OnSceneLoaded;
+        }
+
+        private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
+        {
+            // Re-aplicar todos los ajustes al cargar cualquier escena
+            // Unity puede resetear fullscreen, vsync y volumen al cambiar de escena
+            AplicarTodos();
         }
 
         // ─── Overlay de brillo ───────────────────────────────────────────────
@@ -60,19 +76,19 @@ namespace DungeonLegacy.Managers
             GameObject canvasGO = new GameObject("BrightnessCanvas");
             DontDestroyOnLoad(canvasGO);
 
-            Canvas canvas       = canvasGO.AddComponent<Canvas>();
-            canvas.renderMode   = RenderMode.ScreenSpaceOverlay;
+            Canvas canvas = canvasGO.AddComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.sortingOrder = 100; // por encima del juego, por debajo de la UI de debug
 
-            CanvasScaler scaler       = canvasGO.AddComponent<CanvasScaler>();
-            scaler.uiScaleMode        = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            CanvasScaler scaler = canvasGO.AddComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920, 1080);
 
             GameObject imageGO = new GameObject("BrightnessOverlay");
             imageGO.transform.SetParent(canvasGO.transform, false);
 
             _brightnessOverlay = imageGO.AddComponent<Image>();
-            _brightnessOverlay.color        = new Color(0f, 0f, 0f, 0f);
+            _brightnessOverlay.color = new Color(0f, 0f, 0f, 0f);
             _brightnessOverlay.raycastTarget = false; // no bloquea clicks
 
             RectTransform rt = imageGO.GetComponent<RectTransform>();
@@ -86,22 +102,22 @@ namespace DungeonLegacy.Managers
 
         private void CargarAjustes()
         {
-            MusicVolume     = PlayerPrefs.GetFloat(K_MUSIC,      1f);
-            SFXVolume       = PlayerPrefs.GetFloat(K_SFX,        1f);
-            Fullscreen      = PlayerPrefs.GetInt  (K_FULLSCREEN, 1) == 1;
-            ResolutionIndex = PlayerPrefs.GetInt  (K_RESOLUTION, 2); // 1920×1080 por defecto
-            Brightness      = PlayerPrefs.GetFloat(K_BRIGHTNESS, 1f);
-            VSync           = PlayerPrefs.GetInt  (K_VSYNC,      1) == 1;
+            MusicVolume = PlayerPrefs.GetFloat(K_MUSIC, 1f);
+            SFXVolume = PlayerPrefs.GetFloat(K_SFX, 1f);
+            Fullscreen = PlayerPrefs.GetInt(K_FULLSCREEN, 1) == 1;
+            ResolutionIndex = PlayerPrefs.GetInt(K_RESOLUTION, 2); // 1920×1080 por defecto
+            Brightness = PlayerPrefs.GetFloat(K_BRIGHTNESS, 1f);
+            VSync = PlayerPrefs.GetInt(K_VSYNC, 1) == 1;
         }
 
         public void GuardarAjustes()
         {
-            PlayerPrefs.SetFloat(K_MUSIC,      MusicVolume);
-            PlayerPrefs.SetFloat(K_SFX,        SFXVolume);
-            PlayerPrefs.SetInt  (K_FULLSCREEN, Fullscreen ? 1 : 0);
-            PlayerPrefs.SetInt  (K_RESOLUTION, ResolutionIndex);
+            PlayerPrefs.SetFloat(K_MUSIC, MusicVolume);
+            PlayerPrefs.SetFloat(K_SFX, SFXVolume);
+            PlayerPrefs.SetInt(K_FULLSCREEN, Fullscreen ? 1 : 0);
+            PlayerPrefs.SetInt(K_RESOLUTION, ResolutionIndex);
             PlayerPrefs.SetFloat(K_BRIGHTNESS, Brightness);
-            PlayerPrefs.SetInt  (K_VSYNC,      VSync ? 1 : 0);
+            PlayerPrefs.SetInt(K_VSYNC, VSync ? 1 : 0);
             PlayerPrefs.Save();
         }
 
@@ -157,12 +173,12 @@ namespace DungeonLegacy.Managers
         /// Restaura todos los ajustes a sus valores por defecto y los guarda
         public void ReiniciarAjustes()
         {
-            MusicVolume     = 1f;
-            SFXVolume       = 1f;
-            Fullscreen      = true;
+            MusicVolume = 1f;
+            SFXVolume = 1f;
+            Fullscreen = true;
             ResolutionIndex = 2;    // 1920 × 1080
-            Brightness      = 1f;
-            VSync           = true;
+            Brightness = 1f;
+            VSync = true;
 
             AplicarTodos();
             GuardarAjustes();

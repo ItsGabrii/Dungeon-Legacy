@@ -106,7 +106,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 1
+  m_SortingOrder: 3
   m_Sprite: {fileID: 5120410236738981136, guid: 6cb1d7769d08d104682038277ab54547, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
@@ -133,8 +133,8 @@ MonoBehaviour:
   _maxHealth: 80
   _moveSpeed: 3
   _detectionRadius: 3
-  _attackDamage: 33
-  _attackRange: 0.8
+  _attackDamage: 23
+  _attackRange: 0.5
   _attackCooldown: 2
   _chaseDuration: 3
   _goldDrop: 10
@@ -142,6 +142,8 @@ MonoBehaviour:
   _patrolSpeed: 1.5
   _patrolWaitTime: 1.5
   _attackAnimDuration: 0.6
+  _attackHitDelay: 0.2
+  _maxVerticalChase: 1.5
   _playerLayer:
     serializedVersion: 2
     m_Bits: 64

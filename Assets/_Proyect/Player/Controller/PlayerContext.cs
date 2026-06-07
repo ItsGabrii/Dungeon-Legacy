@@ -20,6 +20,7 @@ namespace DungeonLegacy.Player
 
         // Parámetros de movimiento
         public float MoveSpeed { get; set; } = 5f;
+        public float MaxMoveSpeed { get; set; } = 12f;  // techo físico de velocidad
         public float JumpForce { get; set; } = 12f;
         public float GroundCheckRadius { get; } = 0.2f;
 
@@ -31,7 +32,6 @@ namespace DungeonLegacy.Player
         public bool IsGrounded { get; set; }
         public bool IsFacingRight { get; set; } = true;
 
-        private PlayerAttackState _attack;
         public float DefaultGravityScale { get; }
 
         public PlayerContext(

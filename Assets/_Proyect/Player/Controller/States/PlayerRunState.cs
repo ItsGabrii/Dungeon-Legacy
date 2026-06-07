@@ -9,8 +9,11 @@ namespace DungeonLegacy.Player.States
 
         public void FixedUpdate(PlayerContext ctx)
         {
+            // Velocidad limitada por MaxMoveSpeed — evita que las bendiciones rompan el movimiento
+            float speed = Mathf.Min(ctx.MoveSpeed, ctx.MaxMoveSpeed);
+
             ctx.Rb.linearVelocity = new Vector2(
-                ctx.MoveInput * ctx.MoveSpeed,
+                ctx.MoveInput * speed,
                 ctx.Rb.linearVelocity.y
             );
             ctx.Animator.SetFloat("Speed", Mathf.Abs(ctx.MoveInput));

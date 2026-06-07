@@ -1,4 +1,5 @@
 using UnityEngine;
+using DungeonLegacy;
 using DungeonLegacy.Managers;
 using DungeonLegacy.UI;
 
@@ -6,7 +7,6 @@ using DungeonLegacy.UI;
 public class Chest : MonoBehaviour, IInteractable
 {
     [SerializeField] private int _goldAmount = 50;
-
     private bool _isOpened = false;
     private SpriteRenderer _sr;
 
@@ -18,10 +18,13 @@ public class Chest : MonoBehaviour, IInteractable
     {
         if (_isOpened) return;
         _isOpened = true;
+
+        // Sonido de cofre al abrirse
+        AudioManager.PlaySFX(AudioManager.GetClip_AbrirCofre());
+
         _sr.enabled = false;
         GetComponent<Collider2D>().enabled = false;
 
-        // Dar oro al jugador
         try
         {
             var gm = ServiceLocator.Get<GenerationManager>();
@@ -29,8 +32,6 @@ public class Chest : MonoBehaviour, IInteractable
         }
         catch { }
 
-        // Abrir selección de bendiciones
         BlessingSelectionUI.Instance?.Show();
-
     }
 }

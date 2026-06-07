@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+ï»¿using System.Collections.Generic;
 using UnityEngine;
 
 namespace DungeonLegacy.Progression
@@ -6,16 +6,16 @@ namespace DungeonLegacy.Progression
     public enum BlessingType { MaxHealth, MoveSpeed, AttackDamage, MaxResource }
     public enum BlessingTier { Bronze, Silver, Gold }
 
-    /// Define una bendición con su tipo, tier y porcentaje de bonus.
-    /// El porcentaje se genera aleatoriamente dentro del rango del tier.
+    /// Define una bendiciÃ³n con su tipo, tier y porcentaje de bonus.
     public class BlessingData
     {
-        // Rangos de bonus por tier: Bronze 5-7%, Silver 10-13%, Gold 15-18%
+        // Rangos aumentados para que el jugador note la diferencia en nÃºmero de golpes:
+        // Bronze 20-25% | Silver 35-45% | Gold 50-65%
         private static readonly (float min, float max)[] _tierRanges =
         {
-            (5f,  7f),
-            (10f, 13f),
-            (15f, 18f)
+            (20f, 25f),   // Bronze â€” mejora notable, daÃ±o 20â†’24-25
+            (35f, 45f),   // Silver â€” cambio de 4 golpes a 3 contra el orco
+            (50f, 65f),   // Gold   â€” cambio claro, empuja hacia 2-3 golpes
         };
 
         public BlessingType Type { get; }
@@ -24,11 +24,11 @@ namespace DungeonLegacy.Progression
 
         public string DisplayName => Type switch
         {
-            BlessingType.MaxHealth => "Corazón Robusto",
-            BlessingType.MoveSpeed => "Reflejos Rápidos",
+            BlessingType.MaxHealth => "CorazÃ³n Robusto",
+            BlessingType.MoveSpeed => "Reflejos RÃ¡pidos",
             BlessingType.AttackDamage => "Filo Afilado",
             BlessingType.MaxResource => "Reserva Ampliada",
-            _ => "Bendición"
+            _ => "BendiciÃ³n"
         };
 
         public string TierName => Tier switch
@@ -41,10 +41,10 @@ namespace DungeonLegacy.Progression
 
         public string Description => Type switch
         {
-            BlessingType.MaxHealth => $"+{BonusPercent:F0}% de Vida Máxima",
+            BlessingType.MaxHealth => $"+{BonusPercent:F0}% de Vida MÃ¡xima",
             BlessingType.MoveSpeed => $"+{BonusPercent:F0}% de Velocidad",
-            BlessingType.AttackDamage => $"+{BonusPercent:F0}% de Daño",
-            BlessingType.MaxResource => $"+{BonusPercent:F0}% de Energía y Maná",
+            BlessingType.AttackDamage => $"+{BonusPercent:F0}% de DaÃ±o",
+            BlessingType.MaxResource => $"+{BonusPercent:F0}% de EnergÃ­a y ManÃ¡",
             _ => ""
         };
 
@@ -56,12 +56,10 @@ namespace DungeonLegacy.Progression
             BonusPercent = Random.Range(range.min, range.max);
         }
 
-        /// Genera 3 bendiciones con tipos únicos y el mismo tier aleatorio — igual que LoL
+        /// Genera 3 bendiciones con tipos Ãºnicos y el mismo tier aleatorio
         public static BlessingData[] GenerateThree()
         {
-            // Un tier compartido para las 3 cartas
             var sharedTier = (BlessingTier)Random.Range(0, 3);
-
             var types = new List<BlessingType>
             {
                 BlessingType.MaxHealth,

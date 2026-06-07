@@ -1,14 +1,12 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using DungeonLegacy;
 
 namespace DungeonLegacy.UI
 {
-    /// Gestiona el menú de pausa — se activa/desactiva con ESC.
-    /// Persiste entre escenas junto al HUDCanvas.
     public class PauseManager : MonoBehaviour
     {
-        // Singleton — garantiza una sola instancia persistente entre escenas
         private static PauseManager _instance;
 
         [Header("Panel")]
@@ -22,12 +20,7 @@ namespace DungeonLegacy.UI
 
         private void Awake()
         {
-            // Prevenir duplicados al cambiar de escena
-            if (_instance != null && _instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
+            if (_instance != null && _instance != this) { Destroy(gameObject); return; }
             _instance = this;
             DontDestroyOnLoad(gameObject);
             _pausePanel.SetActive(false);
@@ -35,7 +28,6 @@ namespace DungeonLegacy.UI
 
         private void Start()
         {
-            // Conectar botones
             _botonReanudar.onClick.AddListener(Reanudar);
             _botonMenuPrincipal.onClick.AddListener(IrAlMenuPrincipal);
         }
@@ -48,7 +40,6 @@ namespace DungeonLegacy.UI
 
         private void TogglePausa()
         {
-            // Si el vendedor está abierto, ESC cierra la tienda en vez de pausar
             if (BlessingSelectionUI.Instance != null && BlessingSelectionUI.Instance.IsVendorOpen)
             {
                 BlessingSelectionUI.Instance.CerrarVendedor();
@@ -58,6 +49,9 @@ namespace DungeonLegacy.UI
             _pausado = !_pausado;
             _pausePanel.SetActive(_pausado);
             Time.timeScale = _pausado ? 0f : 1f;
+
+            if (_pausado) AudioManager.PausarMusica();
+            else AudioManager.ReanudarMusica();
         }
 
         private void Reanudar()
@@ -65,6 +59,7 @@ namespace DungeonLegacy.UI
             _pausado = false;
             _pausePanel.SetActive(false);
             Time.timeScale = 1f;
+            AudioManager.ReanudarMusica();
         }
 
         private void IrAlMenuPrincipal()

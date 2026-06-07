@@ -15,17 +15,22 @@ namespace DungeonLegacy.Player
 
         private void Update()
         {
-            // Obtener referencia al texto via singleton — siempre actualizada
             if (InteractionTextUI.Instance != null && _interactionText == null)
             {
                 _interactionText = InteractionTextUI.Instance.GetComponent<TextMeshProUGUI>();
                 _textRect = InteractionTextUI.Instance.GetComponent<RectTransform>();
             }
 
-            // Si no hay texto disponible no procesar interacciones visuales
             if (_interactionText == null) return;
 
-            // No mostrar texto de interacción si el vendedor o el cofre están abiertos
+            // Bloquear interacciones mientras el epitafio está visible
+            if (EpitaphScreen.IsShowing)
+            {
+                _interactionText.text = "";
+                return;
+            }
+
+            // Bloquear si el vendedor o el cofre están abiertos
             if (BlessingSelectionUI.Instance != null &&
                (BlessingSelectionUI.Instance.IsVendorOpen || BlessingSelectionUI.Instance.IsPanelOpen))
             {
@@ -48,12 +53,10 @@ namespace DungeonLegacy.Player
 
                     Vector2 screenPos = Camera.main.WorldToScreenPoint(worldPos);
                     _textRect.position = screenPos;
-
                     _interactionText.text = _currentTarget.InteractionPrompt;
 
                     if (Input.GetKeyDown(KeyCode.E))
                         _currentTarget.Interact(gameObject);
-
                     return;
                 }
             }

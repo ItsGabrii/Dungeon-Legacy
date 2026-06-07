@@ -6,27 +6,25 @@ using DungeonLegacy.Managers;
 
 namespace DungeonLegacy.UI
 {
-    /// Panel de opciones — vive en MenuPrincipalScene.
-    /// Guarda los ajustes al cerrarse (botón Salir o ESC).
     public class OptionsPanel : MonoBehaviour
     {
         [Header("Panel")]
         [SerializeField] private GameObject _panel;
 
         [Header("Volumen música")]
-        [SerializeField] private Slider        _musicSlider;
-        [SerializeField] private TMP_InputField _musicInput;   // editable 0-100
+        [SerializeField] private Slider _musicSlider;
+        [SerializeField] private TMP_InputField _musicInput;
 
         [Header("Volumen efectos")]
-        [SerializeField] private Slider        _sfxSlider;
+        [SerializeField] private Slider _sfxSlider;
         [SerializeField] private TMP_InputField _sfxInput;
 
         [Header("Pantalla")]
-        [SerializeField] private Toggle       _fullscreenToggle;
+        [SerializeField] private Toggle _fullscreenToggle;
         [SerializeField] private TMP_Dropdown _resolutionDropdown;
 
         [Header("Brillo")]
-        [SerializeField] private Slider        _brightnessSlider;
+        [SerializeField] private Slider _brightnessSlider;
         [SerializeField] private TMP_InputField _brightnessInput;
 
         [Header("V-Sync")]
@@ -37,34 +35,27 @@ namespace DungeonLegacy.UI
         [SerializeField] private Button _guardarButton;
         [SerializeField] private Button _reiniciarButton;
 
-        private bool _isOpen          = false;
-        private bool _actualizandoUI  = false; // evita bucles slider ↔ input
+        private bool _isOpen = false;
+        private bool _actualizandoUI = false;
 
-        private void Awake()
-        {
-            _panel.SetActive(false);
-        }
+        private void Awake() => _panel.SetActive(false);
 
         private void Start()
         {
-            // Dropdown de resoluciones
             _resolutionDropdown.ClearOptions();
             var opciones = new List<string>();
             foreach (var (w, h) in OptionsManager.Resoluciones)
                 opciones.Add($"{w} × {h}");
             _resolutionDropdown.AddOptions(opciones);
 
-            // Listeners sliders
             _musicSlider.onValueChanged.AddListener(OnMusicSliderChanged);
             _sfxSlider.onValueChanged.AddListener(OnSFXSliderChanged);
             _brightnessSlider.onValueChanged.AddListener(OnBrightnessSliderChanged);
 
-            // Listeners inputs
             _musicInput.onEndEdit.AddListener(OnMusicInputChanged);
             _sfxInput.onEndEdit.AddListener(OnSFXInputChanged);
             _brightnessInput.onEndEdit.AddListener(OnBrightnessInputChanged);
 
-            // Listeners resto
             _fullscreenToggle.onValueChanged.AddListener(OnFullscreenChanged);
             _resolutionDropdown.onValueChanged.AddListener(OnResolutionChanged);
             _vsyncToggle.onValueChanged.AddListener(OnVSyncChanged);
@@ -89,15 +80,14 @@ namespace DungeonLegacy.UI
 
             _actualizandoUI = true;
 
-            _musicSlider.value        = om.MusicVolume;
-            _sfxSlider.value          = om.SFXVolume;
-            _fullscreenToggle.isOn    = om.Fullscreen;
+            _musicSlider.value = om.MusicVolume;
+            _sfxSlider.value = om.SFXVolume;
+            _fullscreenToggle.isOn = om.Fullscreen;
             _resolutionDropdown.value = om.ResolutionIndex;
-            _brightnessSlider.value   = om.Brightness;
-            _vsyncToggle.isOn         = om.VSync;
+            _brightnessSlider.value = om.Brightness;
+            _vsyncToggle.isOn = om.VSync;
 
             ActualizarInputs();
-
             _actualizandoUI = false;
 
             _isOpen = true;
@@ -111,7 +101,7 @@ namespace DungeonLegacy.UI
             _panel.SetActive(false);
         }
 
-        public void GuardarAjustes()  => OptionsManager.Instance?.GuardarAjustes();
+        public void GuardarAjustes() => OptionsManager.Instance?.GuardarAjustes();
 
         public void ReiniciarAjustes()
         {
@@ -121,15 +111,14 @@ namespace DungeonLegacy.UI
 
             _actualizandoUI = true;
 
-            _musicSlider.value        = om.MusicVolume;
-            _sfxSlider.value          = om.SFXVolume;
-            _fullscreenToggle.isOn    = om.Fullscreen;
+            _musicSlider.value = om.MusicVolume;
+            _sfxSlider.value = om.SFXVolume;
+            _fullscreenToggle.isOn = om.Fullscreen;
             _resolutionDropdown.value = om.ResolutionIndex;
-            _brightnessSlider.value   = om.Brightness;
-            _vsyncToggle.isOn         = om.VSync;
+            _brightnessSlider.value = om.Brightness;
+            _vsyncToggle.isOn = om.VSync;
 
             ActualizarInputs();
-
             _actualizandoUI = false;
         }
 
@@ -139,6 +128,7 @@ namespace DungeonLegacy.UI
         {
             if (_actualizandoUI) return;
             OptionsManager.Instance?.SetMusicVolume(v);
+            AudioManager.ActualizarVolumenes(); // ← sincroniza AudioManager en tiempo real
             if (_musicInput != null) _musicInput.text = SliderToTexto(v);
         }
 
@@ -146,6 +136,7 @@ namespace DungeonLegacy.UI
         {
             if (_actualizandoUI) return;
             OptionsManager.Instance?.SetSFXVolume(v);
+            AudioManager.ActualizarVolumenes(); // ← sincroniza AudioManager en tiempo real
             if (_sfxInput != null) _sfxInput.text = SliderToTexto(v);
         }
 
@@ -162,9 +153,10 @@ namespace DungeonLegacy.UI
         {
             float v = TextoToSlider(texto);
             OptionsManager.Instance?.SetMusicVolume(v);
+            AudioManager.ActualizarVolumenes();
             _actualizandoUI = true;
             _musicSlider.value = v;
-            _musicInput.text   = SliderToTexto(v); // normalizar
+            _musicInput.text = SliderToTexto(v);
             _actualizandoUI = false;
         }
 
@@ -172,9 +164,10 @@ namespace DungeonLegacy.UI
         {
             float v = TextoToSlider(texto);
             OptionsManager.Instance?.SetSFXVolume(v);
+            AudioManager.ActualizarVolumenes();
             _actualizandoUI = true;
             _sfxSlider.value = v;
-            _sfxInput.text   = SliderToTexto(v);
+            _sfxInput.text = SliderToTexto(v);
             _actualizandoUI = false;
         }
 
@@ -184,36 +177,33 @@ namespace DungeonLegacy.UI
             OptionsManager.Instance?.SetBrightness(v);
             _actualizandoUI = true;
             _brightnessSlider.value = v;
-            _brightnessInput.text   = SliderToTexto(v);
+            _brightnessInput.text = SliderToTexto(v);
             _actualizandoUI = false;
         }
 
         // ─── Callbacks resto ─────────────────────────────────────────────────
 
-        private void OnFullscreenChanged(bool v)  => OptionsManager.Instance?.SetFullscreen(v);
-        private void OnResolutionChanged(int i)   => OptionsManager.Instance?.SetResolution(i);
-        private void OnVSyncChanged(bool v)       => OptionsManager.Instance?.SetVSync(v);
+        private void OnFullscreenChanged(bool v) => OptionsManager.Instance?.SetFullscreen(v);
+        private void OnResolutionChanged(int i) => OptionsManager.Instance?.SetResolution(i);
+        private void OnVSyncChanged(bool v) => OptionsManager.Instance?.SetVSync(v);
 
         // ─── Helpers ─────────────────────────────────────────────────────────
 
-        /// Actualiza los campos de texto con los valores actuales de los sliders
         private void ActualizarInputs()
         {
-            if (_musicInput      != null) _musicInput.text      = SliderToTexto(_musicSlider.value);
-            if (_sfxInput        != null) _sfxInput.text        = SliderToTexto(_sfxSlider.value);
+            if (_musicInput != null) _musicInput.text = SliderToTexto(_musicSlider.value);
+            if (_sfxInput != null) _sfxInput.text = SliderToTexto(_sfxSlider.value);
             if (_brightnessInput != null) _brightnessInput.text = SliderToTexto(_brightnessSlider.value);
         }
 
-        /// Convierte valor de slider (0-1) a texto de porcentaje ("100")
         private static string SliderToTexto(float v) =>
             Mathf.RoundToInt(v * 100f).ToString();
 
-        /// Convierte texto de porcentaje a valor de slider (0-1), clampado 0-100
         private static float TextoToSlider(string texto)
         {
             if (int.TryParse(texto, out int n))
                 return Mathf.Clamp(n, 0, 100) / 100f;
-            return 1f; // fallback si el texto no es válido
+            return 1f;
         }
     }
 }

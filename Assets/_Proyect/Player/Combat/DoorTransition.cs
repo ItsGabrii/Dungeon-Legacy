@@ -1,12 +1,12 @@
+using UnityEngine;
+using DungeonLegacy;
 using DungeonLegacy.Generation;
 using DungeonLegacy.Managers;
-using UnityEngine;
 
 /// Puerta interactuable — transiciona a la siguiente sala o escena.
 public class DoorTransition : MonoBehaviour, IInteractable
 {
     [SerializeField] private string _targetScene = "DungeonScene";
-
     [Tooltip("Activar en puertas de DungeonScene — usa RoomManager para el flujo de salas")]
     [SerializeField] private bool _useRoomManager = false;
 
@@ -14,9 +14,13 @@ public class DoorTransition : MonoBehaviour, IInteractable
 
     public void Interact(GameObject interactor)
     {
+        // Sonido de puerta al interactuar
+        AudioManager.PlaySFX(AudioManager.GetClip_AbrirPuerta());
+        // Sonido de transición de pantalla
+        AudioManager.PlaySFX(AudioManager.GetClip_TransicionSala());
+
         if (_useRoomManager)
         {
-            // Puerta de DungeonScene — notifica al RoomManager que la sala está completada
             try
             {
                 var rm = ServiceLocator.Get<RoomManager>();
@@ -25,7 +29,6 @@ public class DoorTransition : MonoBehaviour, IInteractable
             catch { }
         }
 
-        // Puerta de BaseScene o fallback — transición directa
         try
         {
             var stm = ServiceLocator.Get<SceneTransitionManager>();

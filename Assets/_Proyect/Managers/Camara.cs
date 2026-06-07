@@ -4,6 +4,8 @@ namespace DungeonLegacy
 {
     public class CameraFollow : MonoBehaviour
     {
+        private static CameraFollow _instance;
+
         [Header("Target")]
         [SerializeField] private Transform _target;
 
@@ -21,13 +23,34 @@ namespace DungeonLegacy
         [SerializeField] private float _minY = -10f;
         [SerializeField] private float _maxY = 10f;
 
+        // Estado interno del shake
+        private float _shakeIntensity = 0f;
+        private float _shakeTimer = 0f;
+
+        private void Awake()
+        {
+            _instance = this;
+        }
+
+        /// Activa una sacudida de cámara.
+        /// intensity: desplazamiento máximo en unidades de mundo (0.1 suave · 0.25 fuerte)
+        /// duration:  duración en segundos
+        public static void Shake(float intensity, float duration)
+        {
+            if (_instance == null) return;
+            // Solo sobreescribir si la nueva sacudida es igual o más intensa
+            if (intensity >= _instance._shakeIntensity)
+            {
+                _instance._shakeIntensity = intensity;
+                _instance._shakeTimer = duration;
+            }
+        }
+
         public void SetBounds(float minX, float maxX, float minY, float maxY)
         {
             _useBounds = true;
-            _minX = minX;
-            _maxX = maxX;
-            _minY = minY;
-            _maxY = maxY;
+            _minX = minX; _maxX = maxX;
+            _minY = minY; _maxY = maxY;
         }
 
         private void LateUpdate()
@@ -40,15 +63,22 @@ namespace DungeonLegacy
                 transform.position.z
             );
 
-            // Aplicar límites si están activados
             if (_useBounds)
             {
-                // Calcular el tamaño del viewport para no salir de los límites
                 float halfHeight = Camera.main.orthographicSize;
                 float halfWidth = halfHeight * Camera.main.aspect;
-
                 targetPos.x = Mathf.Clamp(targetPos.x, _minX + halfWidth, _maxX - halfWidth);
                 targetPos.y = Mathf.Clamp(targetPos.y, _minY + halfHeight, _maxY - halfHeight);
+            }
+
+            // Aplicar shake sobre la posición calculada
+            if (_shakeTimer > 0f)
+            {
+                _shakeTimer -= Time.deltaTime;
+                Vector2 offset = Random.insideUnitCircle * _shakeIntensity;
+                targetPos.x += offset.x;
+                targetPos.y += offset.y;
+                if (_shakeTimer <= 0f) _shakeIntensity = 0f;
             }
 
             transform.position = Vector3.Lerp(

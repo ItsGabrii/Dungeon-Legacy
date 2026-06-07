@@ -1,0 +1,22 @@
+fileFormatVersion: 2
+guid: 7417c444f88b20141bb726f986879689
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - musicaBaseScene: {fileID: 8300000, guid: 4199582117fe2864caad8839b6dfe623, type: 3}
+  - hoverUI: {fileID: 8300000, guid: 8b3b4566a8e597744befe4aa1305acf8, type: 3}
+  - elegirBendicion: {fileID: 8300000, guid: ab9978929fb70234a9bdf6035621133a, type: 3}
+  - comprarBendicion: {fileID: 8300000, guid: cbc03c468480eb04d96e734f5eb6f791, type: 3}
+  - ataqueJugador: {instanceID: 0}
+  - hitEnemigo: {instanceID: 0}
+  - recibirDanyo: {instanceID: 0}
+  - muerteJugador: {instanceID: 0}
+  - recogerMoneda: {instanceID: 0}
+  - abrirCofre: {instanceID: 0}
+  - transicionSala: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

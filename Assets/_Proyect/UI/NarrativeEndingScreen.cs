@@ -2,13 +2,12 @@
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 using TMPro;
+using DungeonLegacy;
+using DungeonLegacy.Managers;
 using DungeonLegacy.Player;
 
 namespace DungeonLegacy.UI
 {
-    /// Gestiona los dos finales narrativos del juego:
-    /// — Final 1: confirmación de salida + pantalla de retirada del héroe
-    /// — Final 2: pantalla del sucesor que se niega (15%)
     public class NarrativeEndingScreen : MonoBehaviour
     {
         private static NarrativeEndingScreen _instance;
@@ -32,7 +31,6 @@ namespace DungeonLegacy.UI
         [Header("Escena menú principal")]
         [SerializeField] private string _mainMenuScene = "MainMenuScene";
 
-        // Callbacks internos
         private System.Action _onConfirm;
         private System.Action _onRetirementContinue;
 
@@ -46,12 +44,10 @@ namespace DungeonLegacy.UI
             _instance = this;
             DontDestroyOnLoad(gameObject);
 
-            // Ocultar todos los paneles al inicio
             _confirmPanel?.SetActive(false);
             _retirementPanel?.SetActive(false);
             _heirRefusesPanel?.SetActive(false);
 
-            // Conectar botones
             _siButton?.onClick.AddListener(OnSiPressed);
             _noButton?.onClick.AddListener(OnNoPressed);
             _retirementContinueBtn?.onClick.AddListener(OnRetirementContinuePressed);
@@ -60,34 +56,34 @@ namespace DungeonLegacy.UI
 
         // ─── Final 1: Confirmación ───────────────────────────────────────────
 
-        /// Muestra el panel "¿Estás seguro que te quieres ir?"
         public void ShowConfirmation(System.Action onConfirm)
         {
             _onConfirm = onConfirm;
             _confirmPanel?.SetActive(true);
             Time.timeScale = 0f;
+            AudioManager.PausarMusica();
         }
 
         private void OnSiPressed()
         {
             _confirmPanel?.SetActive(false);
             _onConfirm?.Invoke();
+            // No reanudamos — el flujo lleva a epitafio y nueva generación
         }
 
         private void OnNoPressed()
         {
             _confirmPanel?.SetActive(false);
             Time.timeScale = 1f;
+            AudioManager.ReanudarMusica();
         }
 
         // ─── Final 1: Retirada ───────────────────────────────────────────────
 
-        /// Muestra el texto de retirada adaptado al skin del personaje
         public void ShowRetirement(string skinName, System.Action onContinue)
         {
             _onRetirementContinue = onContinue;
 
-            // Género gramatical — solo Espadachina es femenino
             string articulo = skinName == "Espadachina" ? "La" : "El";
 
             if (_retirementText != null)
@@ -106,7 +102,6 @@ namespace DungeonLegacy.UI
 
         // ─── Final 2: Sucesor se niega ───────────────────────────────────────
 
-        /// Muestra el final narrativo cuando el sucesor rechaza la herencia
         public void ShowHeirRefuses(PlayerClassType nextClass)
         {
             if (_heirRefusesText != null)
@@ -128,6 +123,10 @@ namespace DungeonLegacy.UI
         {
             _heirRefusesPanel?.SetActive(false);
             Time.timeScale = 1f;
+
+            // Resetear todo el estado antes de volver al menú — la saga familiar termina aquí
+            try { ServiceLocator.Get<GenerationManager>()?.ResetGame(); } catch { }
+
             SceneManager.LoadScene(_mainMenuScene);
         }
     }

@@ -7,7 +7,7 @@ using UnityEngine;
 /// Al interactuar solicita confirmación y activa el final de abandono.
 public class ExitDoor : MonoBehaviour, IInteractable
 {
-    public string InteractionPrompt => "SALIR";
+    public string InteractionPrompt => "ABANDONAR";
 
     public void Interact(GameObject interactor)
     {
