@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using DungeonLegacy;
 
 namespace DungeonLegacy.Managers
 {
@@ -47,13 +48,15 @@ namespace DungeonLegacy.Managers
                 return;
             }
             _instance = this;
+
+            // Mover a la raíz de la escena — DontDestroyOnLoad solo funciona en GameObjects raíz
+            transform.SetParent(null);
             DontDestroyOnLoad(gameObject);
 
             CrearOverlayBrillo();
             CargarAjustes();
             AplicarTodos();
 
-            // Re-aplicar ajustes cada vez que carga una escena nueva
             SceneManager.sceneLoaded += OnSceneLoaded;
         }
 
@@ -188,9 +191,9 @@ namespace DungeonLegacy.Managers
 
         private void AplicarVolumen()
         {
-            // Volumen maestro hasta que el AudioMixer esté implementado
-            // MusicVolume y SFXVolume se guardan ya preparados para conectar a AudioMixer
-            AudioListener.volume = Mathf.Max(MusicVolume, SFXVolume);
+            // Control de volumen exclusivamente a través de AudioManager
+            // AudioListener.volume se mantiene a 1f para evitar interferencias
+            AudioManager.ActualizarVolumenes();
         }
 
         private void AplicarPantallaCompleta()

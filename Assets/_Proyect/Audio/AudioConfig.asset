@@ -16,10 +16,11 @@ MonoBehaviour:
   hoverUI: {fileID: 8300000, guid: 8b3b4566a8e597744befe4aa1305acf8, type: 3}
   elegirBendicion: {fileID: 8300000, guid: ab9978929fb70234a9bdf6035621133a, type: 3}
   comprarBendicion: {fileID: 8300000, guid: cbc03c468480eb04d96e734f5eb6f791, type: 3}
-  ataqueJugador: {fileID: 0}
-  hitEnemigo: {fileID: 0}
-  recibirDanyo: {fileID: 0}
+  ataqueJugador: {fileID: 8300000, guid: ed9d2d5de450a9344a063655336c068a, type: 3}
+  hitEnemigo: {fileID: 8300000, guid: 2099ccfb489ab644a8c2206e8f5c5eda, type: 3}
+  recibirDanyo: {fileID: 8300000, guid: 3ca1f61a5a85c224b890702158767028, type: 3}
   muerteJugador: {fileID: 0}
-  recogerMoneda: {fileID: 0}
-  abrirCofre: {fileID: 0}
-  transicionSala: {fileID: 0}
+  recogerMoneda: {fileID: 8300000, guid: 44f556deded163a42919ffb4815a381e, type: 3}
+  abrirCofre: {fileID: 8300000, guid: f867646622545004da4f9e5299beeb30, type: 3}
+  abrirPuerta: {fileID: 0}
+  transicionSala: {fileID: 8300000, guid: 82c24ef0ee8e0f447983375fd25b8880, type: 3}

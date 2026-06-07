@@ -71,9 +71,12 @@ namespace DungeonLegacy
         public static void PlayMusica(AudioClip clip)
         {
             if (_instance == null || clip == null) return;
+
+            // Actualizar volumen siempre — aunque el clip ya esté sonando
+            _instance._musicSource.volume = GetMusicVolume();
+
             if (_instance._musicSource.clip == clip && _instance._musicSource.isPlaying) return;
 
-            _instance._musicSource.volume = GetMusicVolume();
             _instance._musicSource.clip = clip;
             _instance._musicSource.Play();
         }
@@ -98,14 +101,19 @@ namespace DungeonLegacy
             if (_instance == null) return;
             if (!_instance._musicSource.isPlaying)
                 _instance._musicSource.UnPause();
+            // Re-aplicar volúmenes al reanudar — garantiza que los ajustes persisten
+            ActualizarVolumenes();
         }
 
         /// Actualiza los volúmenes desde OptionsManager — llamar al cambiar ajustes
         public static void ActualizarVolumenes()
         {
             if (_instance == null) return;
-            _instance._musicSource.volume = GetMusicVolume();
-            _instance._sfxSource.volume = GetSFXVolume();
+            float mv = GetMusicVolume();
+            float sv = GetSFXVolume();
+            Debug.Log($"[AudioManager] ActualizarVolumenes → music={mv:F2}  sfx={sv:F2}  OptionsManager={OptionsManager.Instance != null}");
+            _instance._musicSource.volume = mv;
+            _instance._sfxSource.volume = sv;
         }
 
         // ─── Acceso rápido a los clips de la config ───────────────────────────
