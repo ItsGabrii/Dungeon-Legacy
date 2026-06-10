@@ -13,7 +13,8 @@ A 2D action-exploration game built in Unity 6000 that hybridizes **Metroidvania*
 ---
 
 <!-- SCREENSHOT PLACEHOLDER -->
-> 📸 **[ADD HERE: Gameplay GIF or screenshot — ideally the dungeon scene with 2D lighting active, showing the player character and at least one enemy. A 600×340px GIF of a combat sequence works best on GitHub.]**
+> 📸 <img width="600" height="340" alt="image" src="https://github.com/user-attachments/assets/f81ac0b6-f259-4bab-97ed-057010f8b7e4" />
+
 
 ---
 
