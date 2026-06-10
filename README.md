@@ -13,7 +13,7 @@ A 2D action-exploration game built in Unity 6000 that hybridizes **Metroidvania*
 ---
 
 <!-- SCREENSHOT PLACEHOLDER -->
-> 📸 <img width="600" height="340" alt="image" src="https://github.com/user-attachments/assets/f81ac0b6-f259-4bab-97ed-057010f8b7e4" />
+>  <img width="600" height="340" alt="image" src="https://github.com/user-attachments/assets/f81ac0b6-f259-4bab-97ed-057010f8b7e4" />
 
 
 ---
